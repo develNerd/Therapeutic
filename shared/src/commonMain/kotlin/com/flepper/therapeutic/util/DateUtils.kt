@@ -9,6 +9,7 @@ import kotlinx.datetime.toInstant
 
 fun String.getLocaleDateTime(): LocalDateTime? {
     return try {
+        
         var dateString = this
         if (this.contains("Z")){
            dateString = dateString.replace('Z',' ')

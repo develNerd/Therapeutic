@@ -7,6 +7,7 @@ import com.flepper.therapeutic.android.R
 import com.flepper.therapeutic.android.di.ApplicationContext
 import com.flepper.therapeutic.android.presentation.core.BaseViewModel
 import com.flepper.therapeutic.android.presentation.theme.eventColors
+import com.flepper.therapeutic.android.util.toCalendarDay
 import com.flepper.therapeutic.data.SignInRequest
 import com.flepper.therapeutic.data.SignInUser
 import com.flepper.therapeutic.data.SignUpRequest
@@ -15,9 +16,13 @@ import com.flepper.therapeutic.data.models.FeaturedContent
 import com.flepper.therapeutic.data.models.WorldWideEvent
 import com.flepper.therapeutic.data.usecasefactories.AuthUseCaseFactory
 import com.flepper.therapeutic.data.usecasefactories.HomeUseCaseFactory
+import com.prolificinteractive.materialcalendarview.CalendarDay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import org.koin.core.component.inject
+import java.util.*
+import kotlin.collections.HashSet
+import kotlin.time.Duration.Companion.seconds
 
 class EutiViewModel : BaseViewModel() {
 
@@ -286,5 +291,32 @@ class EutiViewModel : BaseViewModel() {
     fun setSignInError(value: String){
         _signInError.value = value
     }
+
+    /** @SetAppointmentDate*/
+    val _selectedAppointmentDate = MutableStateFlow("")
+    val selectedAppointmentDate: StateFlow<String>
+        get() = _selectedAppointmentDate
+
+    fun setAppointmentDate(value: String){
+        _selectedAppointmentDate.value = value
+    }
+
+    /** @AvailableDates*/
+
+    fun getAvailableDates():HashSet<CalendarDay>{
+        val availableDates = mutableSetOf<CalendarDay>()
+        val startCal = Calendar.getInstance()
+        val start = startCal.get(Calendar.DATE)
+        startCal.set(Calendar.DATE,startCal.get(Calendar.DATE).plus(7))
+        val lastIndex = startCal.get(Calendar.DATE)
+        Log.e("Start-last","$start + $lastIndex")
+        (start..lastIndex).forEach {day ->
+            val c1 = Calendar.getInstance()
+            c1.set(Calendar.DATE,day)
+            availableDates.add(c1.toCalendarDay())
+        }
+        return availableDates.toHashSet()
+    }
+
 
 }

@@ -61,12 +61,15 @@ fun EutiHome(homeNavController:NavController,eutiViewModel: EutiViewModel,homeVi
 
     val toSignInOrSignUp= EutiScreens.ToSignUpOrSignInScreen(eutiViewModel)
 
-    /** @LOLYouCanMakeThisDynamic -> Populate as needed*/
+    val selectDateScreen = EutiScreens.ScheduleSessionDateScreen(eutiViewModel)
+
+    /** @LOLYouCanMakeThisDynamic -> Populate as needed - Not Scalable as at now*/
     val bottomDestinations = listOf(
         mainScreen,
         genericView,
         signInScreen,
-        toSignInOrSignUp
+        toSignInOrSignUp,
+        selectDateScreen
     )
 
 

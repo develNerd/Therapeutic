@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.Flow
 
 
 typealias  FlowResult<T> = Flow<ApiResult<T>>
-const val appBaseUrl = "connect.squareup.com/oauth2"
+const val appBaseUrl = "connect.squareupsandbox.com/v2"
 
 //collection paths
 const val FEATURED_CONTENT = "FeaturedContent"

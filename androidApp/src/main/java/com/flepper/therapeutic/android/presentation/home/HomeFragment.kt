@@ -51,6 +51,8 @@ import com.flepper.therapeutic.android.presentation.widgets.MediumTextBold
 import com.flepper.therapeutic.android.presentation.widgets.RegularText
 import kotlinx.coroutines.launch
 
+
+
 enum class MainHomeDestinations(val destName:String){
     VideoDetailScreen("video_detailed_screen"),
     HomeScreen("home_screen"),
@@ -58,6 +60,7 @@ enum class MainHomeDestinations(val destName:String){
 }
 
 class HomeFragment : BaseFragment<FragmentHomeBinding>() {
+
 
 
     private val mainActivityViewModel: MainActivityViewModel by activityViewModels()

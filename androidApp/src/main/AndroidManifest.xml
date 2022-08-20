@@ -10,7 +10,7 @@
         android:supportsRtl="true"
         android:name=".MainApp"
         android:theme="@style/AppTheme"
-        android:icon="@drawable/ic_tr">
+        android:icon="@mipmap/ic_launcher_round">
         <activity
             android:name=".MainActivity"
             android:windowSoftInputMode="adjustResize"

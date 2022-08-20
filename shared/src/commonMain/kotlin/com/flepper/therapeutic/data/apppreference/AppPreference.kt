@@ -19,6 +19,7 @@ class AppPreference(private val context: KMMContext) {
     private val SIGN_IN_USER = "SIGN_IN_USER"
     private val IS_DASHBOARD = "IS_DASHBOARD"
     private val ACCESS_TOKEN = "ACCESS_TOKEN"
+    private val REFRESH_TOKEN = "ACCESS_TOKEN"
 
 
     var anonUser: User?
@@ -41,8 +42,15 @@ class AppPreference(private val context: KMMContext) {
     //TODO(Please revoke token after hackerton)
     //TODO(Token Should be gotten from the Web and refreshed every week)
     var accessToken: String
-        get() = context.getString(IS_DASHBOARD) ?: ""
-        set(value) = context.putString(IS_DASHBOARD, value)
+        get() = context.getString(ACCESS_TOKEN) ?: ""
+        set(value) = context.putString(ACCESS_TOKEN, value)
+
+    //TODO(In Production App Access Tokens will be gotten from a secure server)
+    //TODO(Please revoke token after hackerton)
+    //TODO(Token Should be gotten from the Web and refreshed every week)
+    var refreshToken: String
+        get() = context.getString(REFRESH_TOKEN) ?: ""
+        set(value) = context.putString(REFRESH_TOKEN, value)
 
     var isBeenToDashboard: Boolean
         get() = context.getBool(IS_DASHBOARD, false)

@@ -51,6 +51,6 @@
     <string name="to_schedule_req_sign_up">Or Sign up if you do not have an account with us</string>
     <string name="email">Email</string>
     <string name="something_went_wrong">Something went wrong please try again</string>
-    <string name="ok">Okay</string>
+    <string name="ok">OK</string>
 
 </resources>

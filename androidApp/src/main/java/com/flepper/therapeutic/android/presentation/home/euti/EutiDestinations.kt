@@ -5,6 +5,7 @@ import androidx.navigation.NavController
 import com.flepper.therapeutic.android.presentation.home.HomeViewModel
 import com.flepper.therapeutic.android.presentation.home.euti.authentication.LoginOrSignUpButtonScreen
 import com.flepper.therapeutic.android.presentation.home.euti.authentication.RegistrationScreen
+import com.flepper.therapeutic.android.presentation.home.euti.schedule.SelectDateScreen
 
 
 enum class SheetContentType {
@@ -65,10 +66,15 @@ sealed class EutiScreens(
         })
 
     class ToSignUpOrSignInScreen(eutiViewModel: EutiViewModel) :
-        EutiScreens("ToSignUpOrSignInScreen", bottomSheetContent = { nav -> LoginOrSignUpButtonScreen(
-            navController = nav,
-            eutiViewModel = eutiViewModel
-        )})
+        EutiScreens("ToSignUpOrSignInScreen", bottomSheetContent = { nav ->
+            LoginOrSignUpButtonScreen(
+                navController = nav,
+                eutiViewModel = eutiViewModel
+            )
+        })
+
+    class ScheduleSessionDateScreen(eutiViewModel: EutiViewModel) :
+        EutiScreens("ScheduleSessionScreen", bottomSheetContent = { nav -> SelectDateScreen(nav,eutiViewModel)  })
 
 
 }

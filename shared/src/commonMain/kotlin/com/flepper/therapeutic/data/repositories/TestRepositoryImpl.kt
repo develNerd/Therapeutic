@@ -8,7 +8,7 @@ class TestRepositoryImpl(private val api: Api) : TestRepository {
 
 
     override suspend fun getTestDocsString() = makeRequestToApi {
-        api.getKtorDocs()
+        ""
     }
 
     override suspend fun getCode() = makeRequestToApi {

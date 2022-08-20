@@ -1,17 +1,17 @@
 package com.flepper.therapeutic.data.network
 
-import com.flepper.therapeutic.data.models.Auction
-import io.ktor.client.features.*
-import io.ktor.client.request.*
+import com.flepper.therapeutic.data.models.SquareSearchQuery
+import com.flepper.therapeutic.data.models.customer.Customer
+import com.flepper.therapeutic.data.models.customer.SearchCustomer
 
-class Api(private val ktorHttpClient: KtorHttpClient) {
+class Api(private val squareHttpClient: SquareHttpClient) {
 
-    suspend fun getKtorDocs(): List<Auction> {
-        return ktorHttpClient.GET("auctions_data/")
+    suspend fun createCustomer(request: Customer): Customer {
+        return squareHttpClient.POST(CUSTOMERS,request)
     }
 
-    suspend fun getCode(): String {
-        return ""
+    suspend fun getCustomer(request: SearchCustomer): Customer {
+        return squareHttpClient.POST(CUSTOMERS_SEARCH,request)
     }
 
 }

@@ -2,12 +2,12 @@ package com.flepper.therapeutic.android.presentation
 
 import android.util.Log
 import androidx.lifecycle.viewModelScope
+import com.flepper.therapeutic.android.BuildConfig
 import com.flepper.therapeutic.android.presentation.core.BaseViewModel
 import com.flepper.therapeutic.data.apppreference.AppPreference
 import com.flepper.therapeutic.data.User
 import com.flepper.therapeutic.data.models.Auction
 import com.flepper.therapeutic.data.models.FeaturedContent
-import com.flepper.therapeutic.data.usecases.TestUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.koin.core.component.inject
 
@@ -15,7 +15,6 @@ class MainActivityViewModel : BaseViewModel() {
 
     val appPreferences: AppPreference by inject()
 
-    private val testUseCase: TestUseCase by inject()
 
     private val _auctionsState = MutableStateFlow(OnResultObtained<List<Auction>>(null,false))
     private val auctionsState: MutableStateFlow<OnResultObtained<List<Auction>>>
@@ -27,9 +26,12 @@ class MainActivityViewModel : BaseViewModel() {
 
 
     fun saveUser(userName: String) {
+        appPreferences.accessToken = BuildConfig.SQUARE_ACCESS_TOKEN
+        appPreferences.refreshToken = BuildConfig.SQUARE_REFRESH_TOKEN
         appPreferences.anonUser = User(userName)
     }
 
+/*
     fun getCode(){
         executeApiCallUseCase(
             viewModelScope = viewModelScope,
@@ -42,6 +44,7 @@ class MainActivityViewModel : BaseViewModel() {
                 Log.e("Result",it.message.toString())
             })
     }
+*/
 
 
    /* fun tryTest() {

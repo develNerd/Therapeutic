@@ -10,6 +10,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,6 +20,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat.startIntentSenderForResult
 import androidx.navigation.NavController
 import com.flepper.therapeutic.android.BuildConfig
@@ -69,6 +72,7 @@ fun RegistrationScreen(eutiViewModel: EutiViewModel, navController: NavControlle
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = smallPadding, vertical = smallPadding),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(
@@ -143,9 +147,10 @@ fun RegistrationScreen(eutiViewModel: EutiViewModel, navController: NavControlle
                     isSignInEnabled = userName.isNotEmpty() && passWord.isNotEmpty()
 
                     /** Stop showing progress bar*/
-                    if (signInResponse.isLoaded || signUpResponse.isLoaded){
+                    LaunchedEffect(key1 = signInResponse.isLoaded || signUpResponse.isLoaded, block = {
                         showButtonLoading = false
-                    }
+                    })
+
 
                     RoundedCornerButton(
                         isEnabled = if (!isSignIn) isSignUpEnabled else isSignInEnabled,
@@ -156,9 +161,9 @@ fun RegistrationScreen(eutiViewModel: EutiViewModel, navController: NavControlle
                             .fillMaxWidth()
                     ) {
                         if (isSignIn){
-                            eutiViewModel.signInUser(email = userName,passWord)
+                            eutiViewModel.signInUser(email = userName.trim(),passWord.trim())
                         }else{
-                            eutiViewModel.signUpUser(email = userName,passWord)
+                            eutiViewModel.signUpUser(email = userName.trim(),passWord.trim())
                         }
                         showButtonLoading = true
                     }
@@ -180,30 +185,34 @@ fun RegistrationScreen(eutiViewModel: EutiViewModel, navController: NavControlle
 
         /** @ErrorSnackBar*/
         if (signInError.isNotEmpty()){
+            showButtonLoading = false
             Box(modifier = Modifier
                 .fillMaxWidth()
+                .align(Alignment.BottomCenter)
                 .padding(smallPadding))
             {
-                Snackbar(modifier = Modifier.fillMaxWidth(), action = {
-                    TextButton(onClick = {
-                        eutiViewModel.setSignInError("")
-                    }) {
-                        MediumTextBold(text = stringResource(id = R.string.ok))
-                    }
-                })
+                Card(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = spacing3dp))
                 {
                     Row(
                         Modifier
                             .fillMaxWidth()
-                            .padding(smallPadding), horizontalArrangement = Arrangement.spacedBy(
+                            .padding(spacing3dp), horizontalArrangement = Arrangement.spacedBy(
                             smallPadding), verticalAlignment = Alignment.CenterVertically) {
                         MediumTextBold(text = signInError, modifier = Modifier.weight(1f))
+
+                        TextButton(onClick = {
+                            eutiViewModel.setSignInError("")
+                        }) {
+                            MediumTextBold(text = stringResource(id = R.string.ok), color = MaterialTheme.colors.primary)
+                        }
 
                     }
                 }
             }
             LaunchedEffect(key1 = true, block = {
-                delay(2000)
+                delay(3000)
                 eutiViewModel.setSignInError("")
             })
         }

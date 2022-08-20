@@ -105,6 +105,8 @@ fun MainSheet(
                             }
                             eutiViewModel.addToReplies(eutiChat2)
                             navController.navigate(EutiScreens.ToSignUpOrSignInScreen(eutiViewModel).screenName)
+                        }else{
+                            navController.navigate(EutiScreens.ScheduleSessionDateScreen(eutiViewModel).screenName)
                         }
                     }
                     SheetContentType.WATCH_FEATURED_VIDEOS -> {}

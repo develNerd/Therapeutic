@@ -11,6 +11,6 @@ import kotlinx.coroutines.flow.Flow
 *
 *FlowResult is a type alias in  Contants.kt  Flow<ApiResult<T>>*/
 interface TestRepository {
-    suspend fun getTestDocsString():FlowResult<List<Auction>>
+    suspend fun getTestDocsString():FlowResult<String>
     suspend fun getCode():FlowResult<String>
 }
