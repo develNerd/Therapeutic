@@ -283,8 +283,8 @@ class EutiViewModel : BaseViewModel() {
     val signInError: StateFlow<String>
         get() = _signInError
 
-    fun setSignInError(value: Boolean){
-
+    fun setSignInError(value: String){
+        _signInError.value = value
     }
 
 }
