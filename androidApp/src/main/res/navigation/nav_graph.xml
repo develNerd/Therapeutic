@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/intro_fragment">
+    <action
+        android:id="@+id/action_intro_fragment"
+        app:destination="@id/intro_fragment" />
+
+
+    <fragment
+        android:id="@+id/intro_fragment"
+        android:name="com.flepper.therapeutic.android.presentation.intro.IntroFragment"
+        android:label="fragment_intro"
+        tools:layout="@layout/fragment_intro" >
+
+    </fragment>
+
+    <action
+        android:id="@+id/action_intro_fragment_to_onBoardingFragment"
+        app:destination="@id/onBoardingFragment" />
+
+    <fragment
+        android:id="@+id/onBoardingFragment"
+        android:name="com.flepper.therapeutic.android.presentation.intro.OnBoardingFragment"
+        android:label="fragment_on_boarding"
+        tools:layout="@layout/fragment_on_boarding" >
+        <action
+            android:id="@+id/action_onBoardingFragment_to_homeFragment"
+            app:destination="@id/home" />
+    </fragment>
+
+    <action
+        android:id="@+id/action_to_home"
+        app:popUpTo="@id/homeFragment"
+        app:popUpToInclusive="true"
+        app:destination="@id/home" />
+
+
+    <navigation
+        android:id="@+id/home"
+        android:label="Home"
+        app:startDestination="@id/homeFragment">
+
+        <action
+            android:id="@+id/action_homeFragment"
+            app:popUpTo="@id/homeFragment"
+            app:destination="@id/homeFragment" />
+
+        <fragment
+            android:id="@+id/homeFragment"
+            android:name="com.flepper.therapeutic.android.presentation.home.HomeFragment"
+            android:label="HomeFragment">
+
+        </fragment>
+
+        <fragment
+            android:id="@+id/featuredDetailedFragment"
+            android:name="com.flepper.therapeutic.android.presentation.home.featured.FeaturedDetailedFragment"
+            android:label="FeaturedDetailedFragment" />
+
+    </navigation>
+</navigation>

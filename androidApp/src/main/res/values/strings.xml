@@ -1,0 +1,56 @@
+<resources>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="welcome_to">WelcomeTO</string>
+    <string name="appName">Therapeutic</string>
+    <string name="app_name">Therapeutic</string>
+    <string name="ongoing">Ongoing</string>
+    <string name="by_author">By %1s</string>
+    <string name="intro_desc">Meet the worlds best therapist right here on therapeutic. Meet and Chat with them anytime you’d need their service</string>
+    <string name="get_started">Get Started</string>
+    <string name="watch_into_video">Intro Video</string>
+    <string name="video_url">https://firebasestorage.googleapis.com/v0/b/therapeutic-a6d26.appspot.com/o/featured_content%1s%2$s?alt=media</string>
+    <string name="image_url">https://firebasestorage.googleapis.com/v0/b/therapeutic-a6d26.appspot.com/o/featured_images%1s%2$s?alt=media</string>
+    <string name="avatar_url">https://firebasestorage.googleapis.com/v0/b/therapeutic-a6d26.appspot.com/o/avatars%1s%2$s?alt=media</string>
+    <string name="first_onboarding_desc">At <b>Therapeutic</b> , we believe in your privacy, making you feet at home as much as you can. You can stay anonymous as long as you want whilst you find your peace. </string>
+    <string name="lets_begin_excl">Let’s Begin !</string>
+    <string name="meet_euti">Meet Euti</string>
+    <string name="hi_euti">Hi, I’m Euti</string>
+    <string name="euti_can">Here’s what I can do !</string>
+    <string name="euti_help">I’ll help provide some of our amazing contents through out your healing when you’ll need them 24/7.</string>
+    <string name="euti">Euti</string>
+    <string name="name_to_begin_with">All we need is a name to begin with</string>
+    <string name="your_name">User Name</string>
+    <string name="continue_button">Continue</string>
+    <string name="lets_start">Lets Start</string>
+    <string name="hello_user">Holla, %1$s</string>
+    <string name="no_items_here">No Items Available</string>
+    <string name="main_host">Main Host</string>
+    <string name="world_events">Worldwide Events</string>
+    <string name="featured_content">Featured Content</string>
+    <string name="attend">Attend</string>
+    <string name="host_row">"<b>Hosts</b> : %1$s"</string>
+    <string name="hosts">Hosts</string>
+    <string name="decline">Decline</string>
+    <string name="attending">Attending</string>
+    <string name="title_description"><b>%1$s</b> : %2$s</string>
+    <string name="schedules">Session Schedules</string>
+    <string name="response_to_found_events">Yay!, Found a few upcoming events for you. Please swipe right to view more</string>
+    <string name="response_to_ongoing_event">Here, we have an ongoing event. dubbed %1$s</string>
+    <string name="events_not_available">Sorry no events available</string>
+    <string name="sign_In">Sign In</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="continue_with_google">Continue with Google</string>
+    <string name="already_sign_in">Already have an account? Sign In</string>
+    <string name="already_sign_up">Don\'t have an account? Sign Up</string>
+    <string name="or">Or</string>
+    <string name="user_name">User Name</string>
+    <string name="password">Password</string>
+    <string name="repeat_password">Repeat Password</string>
+    <string name="to_schedule_req">To Schedule a session with us, You\'ll need to be signed in</string>
+    <string name="to_schedule_req_sign_up">Or Sign up if you do not have an account with us</string>
+    <string name="email">Email</string>
+    <string name="something_went_wrong">Something went wrong please try again</string>
+    <string name="ok">Okay</string>
+
+</resources>
