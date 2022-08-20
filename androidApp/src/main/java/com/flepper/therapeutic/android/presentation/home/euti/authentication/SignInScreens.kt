@@ -33,6 +33,7 @@ import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
 import com.google.firebase.auth.GoogleAuthProvider
+import kotlinx.coroutines.delay
 import java.util.*
 
 
@@ -65,138 +66,150 @@ fun RegistrationScreen(eutiViewModel: EutiViewModel, navController: NavControlle
 
     Box(modifier = Modifier.fillMaxWidth()) {
 
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = smallPadding, vertical = smallPadding),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(
+                mediumPadding
+            )
+        ) {
+            MediumTextBold(
+                text = stringResource(id = if (isSignIn) R.string.sign_In else R.string.sign_up),
+                color = MaterialTheme.colors.primaryVariant,
+                fontWeight = FontWeight.Bold
+            )
 
-        /** @ErrorSnackBar*/
-        Box(modifier = Modifier
-            .fillMaxWidth()
-            .padding(smallPadding)) {
-            Snackbar(modifier = Modifier.fillMaxWidth()) {
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(smallPadding), horizontalArrangement = Arrangement.spacedBy(
-                    smallPadding), verticalAlignment = Alignment.CenterVertically) {
-                    MediumTextBold(text = signInError, modifier = Modifier.weight(1f))
-                    TextButton(onClick = {
-
-                    }) {
-                        MediumTextBold(text = stringResource(id = R.string.ok))
-                    }
-                }
-            }
-        }
-    }
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = smallPadding, vertical = smallPadding),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(
-            mediumPadding
-        )
-    ) {
-        MediumTextBold(
-            text = stringResource(id = if (isSignIn) R.string.sign_In else R.string.sign_up),
-            color = MaterialTheme.colors.primaryVariant,
-            fontWeight = FontWeight.Bold
-        )
-
-        Column(verticalArrangement = Arrangement.spacedBy(smallPadding)) {
-            /** @UserName Text Field*/
-            OutLineEdittextLogin(
-                hint = stringResource(id = R.string.email),
-                stroke = BorderStroke(
-                    size05dp, gray
-                ),
-                text = userName,
-                modifier = Modifier
-            ) { name ->
-                userName = name
-            }
-
-            /** @Password Text Field*/
-            OutLineEdittextPassword(
-                hint = stringResource(id = R.string.password),
-                stroke = BorderStroke(
-                    size05dp, gray
-                ),
-                text = passWord,
-                modifier = Modifier
-            ) { name ->
-                passWord = name
-            }
-
-
-            /** @RepeatPassword Text Field*/
-            if (!isSignIn) {
-                OutLineEdittextPassword(
-                    hint = stringResource(id = R.string.repeat_password),
+            Column(verticalArrangement = Arrangement.spacedBy(smallPadding)) {
+                /** @UserName Text Field*/
+                OutLineEdittextLogin(
+                    hint = stringResource(id = R.string.email),
                     stroke = BorderStroke(
                         size05dp, gray
                     ),
-                    text = repeatPassword,
+                    text = userName,
                     modifier = Modifier
                 ) { name ->
-                    repeatPassword = name
-                }
-            }
-
-            /** @Buttons*/
-
-            Column(
-                modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(
-                    smallPadding
-                ), horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-
-                var isSignUpEnabled by remember {
-                    mutableStateOf(false)
+                    userName = name
                 }
 
-                isSignUpEnabled =
-                    userName.isNotEmpty() && passWord.isNotEmpty() && repeatPassword.isNotEmpty()
-
-                var isSignInEnabled by remember {
-                    mutableStateOf(false)
-                }
-
-                isSignInEnabled = userName.isNotEmpty() && passWord.isNotEmpty()
-
-                /** Stop showing progress bar*/
-                if (signInResponse.isLoaded || signUpResponse.isLoaded){
-                    showButtonLoading = false
-                }
-
-                RoundedCornerButton(
-                    isEnabled = if (!isSignIn) isSignUpEnabled else isSignInEnabled,
-                    text = stringResource(id = R.string.continue_button),
-                    isLoading = showButtonLoading,
+                /** @Password Text Field*/
+                OutLineEdittextPassword(
+                    hint = stringResource(id = R.string.password),
+                    stroke = BorderStroke(
+                        size05dp, gray
+                    ),
+                    text = passWord,
                     modifier = Modifier
-                        .padding(bottom = largePadding)
-                        .fillMaxWidth()
-                ) {
-                    if (isSignIn){
-                        eutiViewModel.signInUser(email = userName,passWord)
-                    }else{
-                        eutiViewModel.signUpUser(email = userName,passWord)
+                ) { name ->
+                    passWord = name
+                }
+
+
+                /** @RepeatPassword Text Field*/
+                if (!isSignIn) {
+                    OutLineEdittextPassword(
+                        hint = stringResource(id = R.string.repeat_password),
+                        stroke = BorderStroke(
+                            size05dp, gray
+                        ),
+                        text = repeatPassword,
+                        modifier = Modifier
+                    ) { name ->
+                        repeatPassword = name
                     }
-                    showButtonLoading = true
                 }
-                TextButton(onClick = { isSignIn = !isSignIn }) {
-                    MediumTextBold(
-                        text = stringResource(id = if (!isSignIn) R.string.already_sign_in else R.string.already_sign_up),
-                        color = MaterialTheme.colors.primaryVariant, fontWeight = FontWeight.Bold
-                    )
+
+                /** @Buttons*/
+
+                Column(
+                    modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(
+                        smallPadding
+                    ), horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+
+                    var isSignUpEnabled by remember {
+                        mutableStateOf(false)
+                    }
+
+                    isSignUpEnabled =
+                        userName.isNotEmpty() && passWord.isNotEmpty() && repeatPassword.isNotEmpty()
+
+                    var isSignInEnabled by remember {
+                        mutableStateOf(false)
+                    }
+
+                    isSignInEnabled = userName.isNotEmpty() && passWord.isNotEmpty()
+
+                    /** Stop showing progress bar*/
+                    if (signInResponse.isLoaded || signUpResponse.isLoaded){
+                        showButtonLoading = false
+                    }
+
+                    RoundedCornerButton(
+                        isEnabled = if (!isSignIn) isSignUpEnabled else isSignInEnabled,
+                        text = stringResource(id = R.string.continue_button),
+                        isLoading = showButtonLoading,
+                        modifier = Modifier
+                            .padding(bottom = largePadding)
+                            .fillMaxWidth()
+                    ) {
+                        if (isSignIn){
+                            eutiViewModel.signInUser(email = userName,passWord)
+                        }else{
+                            eutiViewModel.signUpUser(email = userName,passWord)
+                        }
+                        showButtonLoading = true
+                    }
+                    TextButton(onClick = { isSignIn = !isSignIn }) {
+                        MediumTextBold(
+                            text = stringResource(id = if (!isSignIn) R.string.already_sign_in else R.string.already_sign_up),
+                            color = MaterialTheme.colors.primaryVariant, fontWeight = FontWeight.Bold
+                        )
+                    }
+                    MediumTextBold(text = stringResource(id = R.string.or))
+                    SignInWithGoogleButton(eutiViewModel)
                 }
-                MediumTextBold(text = stringResource(id = R.string.or))
-                SignInWithGoogleButton(eutiViewModel)
+
+
             }
 
 
         }
 
+        /** @ErrorSnackBar*/
+        if (signInError.isNotEmpty()){
+            Box(modifier = Modifier
+                .fillMaxWidth()
+                .padding(smallPadding))
+            {
+                Snackbar(modifier = Modifier.fillMaxWidth(), action = {
+                    TextButton(onClick = {
+                        eutiViewModel.setSignInError("")
+                    }) {
+                        MediumTextBold(text = stringResource(id = R.string.ok))
+                    }
+                })
+                {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(smallPadding), horizontalArrangement = Arrangement.spacedBy(
+                            smallPadding), verticalAlignment = Alignment.CenterVertically) {
+                        MediumTextBold(text = signInError, modifier = Modifier.weight(1f))
+
+                    }
+                }
+            }
+            LaunchedEffect(key1 = true, block = {
+                delay(2000)
+                eutiViewModel.setSignInError("")
+            })
+        }
 
     }
+
 
 
 }
