@@ -3,15 +3,17 @@ package com.flepper.therapeutic.android.presentation.home.euti
 import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewModelScope
+import com.flepper.therapeutic.android.BuildConfig
 import com.flepper.therapeutic.android.R
 import com.flepper.therapeutic.android.di.ApplicationContext
 import com.flepper.therapeutic.android.presentation.core.BaseViewModel
 import com.flepper.therapeutic.android.presentation.theme.eventColors
-import com.flepper.therapeutic.android.util.toCalendarDay
+import com.flepper.therapeutic.android.util.*
 import com.flepper.therapeutic.data.*
 import com.flepper.therapeutic.data.apppreference.AppPreference
 import com.flepper.therapeutic.data.models.Filter
 import com.flepper.therapeutic.data.models.WorldWideEvent
+import com.flepper.therapeutic.data.models.appointments.*
 import com.flepper.therapeutic.data.models.customer.Customer
 import com.flepper.therapeutic.data.models.customer.ReferenceId
 import com.flepper.therapeutic.data.usecasefactories.AppointmentsUseCaseFactory
@@ -238,7 +240,7 @@ class EutiViewModel : BaseViewModel() {
                 getCustomer(result.id, result,SignInMethod.SIGN_UP)
             }, onError = {
                 //assign to error variable
-                _signInError.value = applicationContext().getString(R.string.something_went_wrong)
+                _eutiGenericError.value = applicationContext().getString(R.string.something_went_wrong)
 
             })
     }
@@ -266,7 +268,7 @@ class EutiViewModel : BaseViewModel() {
                 appPreferences.signInUser = result
             }, onError = {
                 //assign to error variable
-                _signInError.value = applicationContext().getString(R.string.something_went_wrong)
+                _eutiGenericError.value = applicationContext().getString(R.string.something_went_wrong)
             })
     }
 
@@ -282,7 +284,7 @@ class EutiViewModel : BaseViewModel() {
                 getCustomer(result.id, result,SignInMethod.SIGN_IN)
             }, onError = {
                 //assign to error variable
-                _signInError.value = applicationContext().getString(R.string.something_went_wrong)
+                _eutiGenericError.value = applicationContext().getString(R.string.something_went_wrong)
             })
     }
 
@@ -345,26 +347,26 @@ class EutiViewModel : BaseViewModel() {
                 }
             },
             onError = {
-                _signInError.value = applicationContext().getString(R.string.something_went_wrong)
+                _eutiGenericError.value = applicationContext().getString(R.string.something_went_wrong)
                 Log.e("Result", it.message.toString())
             })
     }
 
     /** @SignInError*/
-    val _signInError = MutableStateFlow("")
-    val signInError: StateFlow<String>
-        get() = _signInError
+    private val _eutiGenericError = MutableStateFlow("")
+    val eutiGenericError: StateFlow<String>
+        get() = _eutiGenericError
 
     fun setSignInError(value: String) {
-        _signInError.value = value
+        _eutiGenericError.value = value
     }
 
     /** @SetAppointmentDate*/
-    private val _selectedAppointmentDate = MutableStateFlow("")
-    val selectedAppointmentDate: StateFlow<String>
+    private val _selectedAppointmentDate = MutableStateFlow(CalendarDay.today())
+    val selectedAppointmentDate: StateFlow<CalendarDay>
         get() = _selectedAppointmentDate
 
-    fun setAppointmentDate(value: String) {
+    fun setAppointmentDate(value: CalendarDay) {
         _selectedAppointmentDate.value = value
     }
 
@@ -388,13 +390,16 @@ class EutiViewModel : BaseViewModel() {
     /** @GetAvailableTimes Server*/
 
     fun getTeamMembersLocal(){
-        executeLocalUseCase(
+        executeLocalFlowUseCase(
             viewModelScope = viewModelScope,
-            useCase = appointmentsUseCaseFactory.getTeamMembersUseCase,
+            useCase = appointmentsUseCaseFactory.getTeamMembersLocalUseCase,
             inputValue = Unit,
             callback = { result ->
                 Log.e("Result-Success", result.toString())
-
+                val startAt = _selectedAppointmentDate.value.toAppointmentStartCalendar().time.asSquareApiDateString()
+                val endAt =_selectedAppointmentDate.value.toAppointmentEndCalendar().time.asSquareApiDateString()
+                val startAtRange = StartAtRange(startAt = startAt, endAt = endAt)
+                getTeamMemberAvailableTimes(startAtRange,result.map { it.id })
             }, onError = {
                 //assign to error variable
                 it.printStackTrace()
@@ -402,8 +407,22 @@ class EutiViewModel : BaseViewModel() {
             })
     }
 
-    fun getTeamMemberAvailableTimes(){
 
+
+    private fun getTeamMemberAvailableTimes(startAtRange: StartAtRange, teamMemberIds:List<String>){
+        val segmentFilters  = SegmentFiltersItem(serviceVariationId = BuildConfig.THERAPY_SESSION_CATALOG_ITEM_ID, teamMemberIdFilter = TeamMemberIdFilter(teamMemberIds))
+        val appointmentsFilter = AppointmentsFilter(bookingId = "",startAtRange, listOf(segmentFilters), locationId = BuildConfig.DEFAULT_TEST_LOCATION_ID)
+        val request = SearchAvailabilityRequest(AvailabilityQuery(appointmentsFilter))
+        executeApiCallUseCase(
+            viewModelScope = viewModelScope,
+            useCase = appointmentsUseCaseFactory.getAvailableTimeUseCase,
+            inputValue = request,
+            callback = { result ->
+
+            },
+            onError = {
+                _eutiGenericError.value = applicationContext().getString(R.string.something_went_wrong)
+            })
     }
 
 

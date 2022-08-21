@@ -13,6 +13,8 @@ const val WORD_WIDE_EVENTS = "WorldWideEvents"
 const val COMPANY_NAME = "Therapeutic"
 const val DEFAULT_NOTE = "Customer Created using Euti"
 const val COMPANY_PHONE_NUMBER = ""
+const val SQUARE_API_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.S'Z'"
+
 
 // -> End Collection paths
 

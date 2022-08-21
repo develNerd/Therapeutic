@@ -13,6 +13,7 @@ val key: String = gradleLocalProperties(rootDir).getProperty("WEB_CLIENT_API_KEY
 val squareDefAccessToken: String = gradleLocalProperties(rootDir).getProperty("SQUARE_ACCESS_TOKEN")
 val squareDefRefreshToken: String = gradleLocalProperties(rootDir).getProperty("SQUARE_REFRESH_TOKEN")
 val therapy_session_id:String = gradleLocalProperties(rootDir).getProperty("THERAPY_SESSION_CATALOG_ITEM_ID")
+val defaultTestLocationId:String = gradleLocalProperties(rootDir).getProperty("DEFAULT_TEST_LOCATION_ID")
 
 
 android {
@@ -56,6 +57,7 @@ android {
             buildConfigField("String", "SQUARE_ACCESS_TOKEN", squareDefAccessToken)
             buildConfigField("String", "SQUARE_REFRESH_TOKEN", squareDefRefreshToken)
             buildConfigField("String", "THERAPY_SESSION_CATALOG_ITEM_ID", therapy_session_id)
+            buildConfigField("String", "DEFAULT_TEST_LOCATION_ID", defaultTestLocationId)
         }
     }
 

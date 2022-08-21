@@ -3,6 +3,8 @@ package com.flepper.therapeutic.data.reposositoryimpl
 import com.flepper.therapeutic.data.FlowResult
 import com.flepper.therapeutic.data.TherapeuticDb
 import com.flepper.therapeutic.data.models.*
+import com.flepper.therapeutic.data.models.appointments.SearchAvailabilityRequest
+import com.flepper.therapeutic.data.models.appointments.availabletimeresponse.AvailableTeamMemberTime
 import com.flepper.therapeutic.data.models.customer.Customer
 import com.flepper.therapeutic.data.models.customer.CustomerResponse
 import com.flepper.therapeutic.data.models.customer.SearchCustomer
@@ -43,6 +45,10 @@ class AppointmentsRepositoryImpl(private val api: Api, therapeuticDb: Therapeuti
     /** Should retun o= max of 4 team members*/
     override suspend fun getTeamMembersLocal(): FlowList<TeamMembersItem> {
         return db.query<TeamMembersItemDao>().asFlow().map { it.list.map {item -> item.toTeamMember() } }
+    }
+
+    override suspend fun getTeamAvailableTimes(request: SearchAvailabilityRequest): FlowResult<List<AvailableTeamMemberTime>> = makeRequestToApi {
+        api.getTeamMembersAvailableTimes(request)
     }
 
 

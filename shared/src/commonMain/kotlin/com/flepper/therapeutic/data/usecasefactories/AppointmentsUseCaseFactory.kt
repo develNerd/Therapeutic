@@ -10,4 +10,5 @@ class AppointmentsUseCaseFactory(coroutineScope: CoroutineScope,appointmentsRepo
     val getTeamMembersUseCase = GetTeamMembersUseCase(coroutineScope, appointmentsRepository)
     val saveTeamMemberLocalUseCase = SaveTeamMemberLocalUseCase(coroutineScope, appointmentsRepository)
     val getTeamMembersLocalUseCase = GetTeamMembersLocalUseCase(coroutineScope, appointmentsRepository)
+    val getAvailableTimeUseCase = GetAvailableTimeUseCase(coroutineScope, appointmentsRepository)
 }

@@ -20,8 +20,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.core.app.ActivityCompat.startIntentSenderForResult
 import androidx.navigation.NavController
 import com.flepper.therapeutic.android.BuildConfig
 import com.flepper.therapeutic.android.R
@@ -32,13 +30,9 @@ import com.flepper.therapeutic.android.presentation.home.euti.MAIN_SHEET
 import com.flepper.therapeutic.android.presentation.theme.*
 import com.flepper.therapeutic.android.presentation.widgets.*
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
-import com.google.android.gms.auth.api.identity.BeginSignInResult
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.tasks.OnFailureListener
-import com.google.android.gms.tasks.OnSuccessListener
-import com.google.firebase.auth.GoogleAuthProvider
 import kotlinx.coroutines.delay
-import java.util.*
 
 
 /** @RegistrationScreen*/
@@ -50,7 +44,7 @@ fun RegistrationScreen(eutiViewModel: EutiViewModel, navController: NavControlle
 
     val signInResponse by eutiViewModel.signInResponse.collectAsState()
     val signUpResponse by eutiViewModel.signUpResponse.collectAsState()
-    val signInError by eutiViewModel.signInError.collectAsState()
+    val signInError by eutiViewModel.eutiGenericError.collectAsState()
 
     var userName by remember {
         mutableStateOf("")

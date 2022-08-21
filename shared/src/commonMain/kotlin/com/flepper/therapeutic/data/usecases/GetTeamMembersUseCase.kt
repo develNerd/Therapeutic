@@ -4,6 +4,8 @@ import com.flepper.therapeutic.data.FlowResult
 import com.flepper.therapeutic.data.models.Filter
 import com.flepper.therapeutic.data.models.TeamMembersItem
 import com.flepper.therapeutic.data.models.WorldWideEvent
+import com.flepper.therapeutic.data.models.appointments.SearchAvailabilityRequest
+import com.flepper.therapeutic.data.models.appointments.availabletimeresponse.AvailableTeamMemberTime
 import com.flepper.therapeutic.data.models.customer.CustomerResponse
 import com.flepper.therapeutic.data.repositories.AppointmentsRepository
 import com.flepper.therapeutic.data.repositories.EventsRepository
@@ -35,4 +37,12 @@ class GetTeamMembersLocalUseCase(coroutineScope: CoroutineScope,private val appo
         coroutineScope: CoroutineScope
     ) = appointmentsRepository.getTeamMembersLocal()
 
+}
+
+class GetAvailableTimeUseCase(coroutineScope: CoroutineScope, private val appointmentsRepository: AppointmentsRepository) :
+    BaseUseCaseDispatcher<SearchAvailabilityRequest, FlowResult<List<AvailableTeamMemberTime>>>(coroutineScope) {
+    override suspend fun dispatchInBackground(
+        request: SearchAvailabilityRequest,
+        coroutineScope: CoroutineScope
+    ) = appointmentsRepository.getTeamAvailableTimes(request)
 }

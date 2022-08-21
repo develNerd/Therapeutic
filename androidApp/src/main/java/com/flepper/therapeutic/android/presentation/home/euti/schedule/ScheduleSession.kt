@@ -72,7 +72,7 @@ fun SelectDateScreen(navController: NavController, eutiViewModel: EutiViewModel)
                     tomorrow.get(Calendar.MONTH) + 1,
                     tomorrow.get(Calendar.DATE)
                 )
-                eutiViewModel.setAppointmentDate("${date.year}-${date.month}-${date.day}")
+                eutiViewModel.setAppointmentDate(date)
                 setDateSelected(
                     CalendarDay.from(
                         tomorrow.get(Calendar.YEAR),
@@ -92,7 +92,7 @@ fun SelectDateScreen(navController: NavController, eutiViewModel: EutiViewModel)
                     )
                 )
                 setOnDateChangedListener { widget, date, selected ->
-                    eutiViewModel.setAppointmentDate("${date.year}-${date.month}-${date.day}")
+                    eutiViewModel.setAppointmentDate(date)
                 }
             }
         }
