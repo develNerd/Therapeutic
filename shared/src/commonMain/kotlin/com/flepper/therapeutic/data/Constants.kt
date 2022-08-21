@@ -10,7 +10,9 @@ const val appBaseUrl = "connect.squareupsandbox.com/v2"
 //collection paths
 const val FEATURED_CONTENT = "FeaturedContent"
 const val WORD_WIDE_EVENTS = "WorldWideEvents"
-
+const val COMPANY_NAME = "Therapeutic"
+const val DEFAULT_NOTE = "Customer Created using Euti"
+const val COMPANY_PHONE_NUMBER = ""
 
 // -> End Collection paths
 

@@ -8,21 +8,22 @@ import com.flepper.therapeutic.android.di.ApplicationContext
 import com.flepper.therapeutic.android.presentation.core.BaseViewModel
 import com.flepper.therapeutic.android.presentation.theme.eventColors
 import com.flepper.therapeutic.android.util.toCalendarDay
-import com.flepper.therapeutic.data.SignInRequest
-import com.flepper.therapeutic.data.SignInUser
-import com.flepper.therapeutic.data.SignUpRequest
+import com.flepper.therapeutic.data.*
 import com.flepper.therapeutic.data.apppreference.AppPreference
-import com.flepper.therapeutic.data.models.FeaturedContent
+import com.flepper.therapeutic.data.models.Filter
 import com.flepper.therapeutic.data.models.WorldWideEvent
+import com.flepper.therapeutic.data.models.customer.Customer
+import com.flepper.therapeutic.data.models.customer.ReferenceId
+import com.flepper.therapeutic.data.usecasefactories.AppointmentsUseCaseFactory
 import com.flepper.therapeutic.data.usecasefactories.AuthUseCaseFactory
 import com.flepper.therapeutic.data.usecasefactories.HomeUseCaseFactory
 import com.prolificinteractive.materialcalendarview.CalendarDay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import org.koin.core.component.inject
+import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.HashSet
-import kotlin.time.Duration.Companion.seconds
 
 class EutiViewModel : BaseViewModel() {
 
@@ -34,6 +35,7 @@ class EutiViewModel : BaseViewModel() {
     val applicationContext: ApplicationContext by inject()
     private val homeUseCaseFactory: HomeUseCaseFactory by inject()
     private val authUseCaseFactory: AuthUseCaseFactory by inject()
+    private val appointmentsUseCaseFactory: AppointmentsUseCaseFactory by inject()
 
     /** @MainBottomSheetItems*/
 
@@ -216,13 +218,14 @@ class EutiViewModel : BaseViewModel() {
     /** @SignIn*/
 
     private val _signUpResponse =
-        MutableStateFlow(OnResultObtained<SignInUser>(null, false))
-    val signUpResponse: StateFlow<OnResultObtained<SignInUser>>
+        MutableStateFlow(OnResultObtained<CurrentUser>(null, false))
+    val signUpResponse: StateFlow<OnResultObtained<CurrentUser>>
         get() = _signUpResponse
 
 
-
     fun signUpUser(email: String, password: String) {
+        _signUpResponse.value = OnResultObtained(null, false)
+
         val signUpRequest =
             SignUpRequest(appPreferences.anonUser?.userName ?: "Anon", email, password)
         executeFirebaseUseCase(
@@ -232,8 +235,7 @@ class EutiViewModel : BaseViewModel() {
             state = _signUpResponse,
             callback = { result ->
                 Log.e("Result", result.toString())
-                _signUpResponse.value = OnResultObtained(result, true)
-                appPreferences.signInUser = result
+                getCustomer(result.id, result,SignInMethod.SIGN_UP)
             }, onError = {
                 //assign to error variable
                 _signInError.value = applicationContext().getString(R.string.something_went_wrong)
@@ -244,13 +246,15 @@ class EutiViewModel : BaseViewModel() {
 
     /** @SignIn */
     private val _signInResponse =
-        MutableStateFlow(OnResultObtained<SignInUser>(null, false))
-    val signInResponse: StateFlow<OnResultObtained<SignInUser>>
+        MutableStateFlow(OnResultObtained<CurrentUser>(null, false))
+    val signInResponse: StateFlow<OnResultObtained<CurrentUser>>
         get() = _signInResponse
 
     fun signInUser(email: String, password: String) {
+        _signInResponse.value = OnResultObtained(null, false)
+
         val signInRequest =
-            SignInRequest( email, password)
+            SignInRequest(email, password)
         executeFirebaseUseCase(
             viewModelScope = viewModelScope,
             inputValue = signInRequest,
@@ -266,8 +270,7 @@ class EutiViewModel : BaseViewModel() {
             })
     }
 
-    fun signInWithGoogle(idToken:String){
-
+    fun signInWithGoogle(idToken: String) {
         executeFirebaseUseCase(
             viewModelScope = viewModelScope,
             inputValue = idToken,
@@ -275,11 +278,75 @@ class EutiViewModel : BaseViewModel() {
             state = _signInResponse,
             callback = { result ->
                 Log.e("Result", result.toString())
-                _signInResponse.value = OnResultObtained(result, true)
-                appPreferences.signInUser = result
+                // _signInResponse.value = OnResultObtained(result, true)
+                getCustomer(result.id, result,SignInMethod.SIGN_IN)
             }, onError = {
                 //assign to error variable
                 _signInError.value = applicationContext().getString(R.string.something_went_wrong)
+            })
+    }
+
+    /** @GetCustomer*/
+
+    /** Get Customer if customer does not exist and return if exists */
+    private fun getCustomer(referenceId: String, signInResult: CurrentUser,signInMethod: SignInMethod) {
+        val request = Filter(referenceId = ReferenceId(referenceId))
+        executeApiCallUseCase(
+            viewModelScope = viewModelScope,
+            useCase = appointmentsUseCaseFactory.getCustomerUseCase,
+            inputValue = request,
+            callback = { result ->
+                Log.e("Result", result.toString())
+                if (signInMethod == SignInMethod.SIGN_IN){
+                    _signInResponse.value = OnResultObtained(
+                        signInResult.apply { squareCustomerID = result.customer_id },
+                        true
+                    )
+                    appPreferences.signInUser = signInResult
+                }else {
+                    _signUpResponse.value = OnResultObtained(signInResult, true)
+                    appPreferences.signInUser = signInResult
+                }
+
+            },
+            onError = {
+                /** Create if customer does not exist*/
+                createCustomer(referenceId,signInResult,signInMethod)
+                Log.e("Result", it.message.toString())
+            })
+    }
+
+    /** @CreateCustomer */
+
+    fun createCustomer( referenceId: String,signInResult:CurrentUser,signInMethod: SignInMethod) {
+        val request = Customer(
+            signInResult.email,
+            referenceId,
+            COMPANY_NAME,
+            DEFAULT_NOTE,
+            appPreferences.anonUser?.userName ?: "",
+            appPreferences.anonUser?.userName ?: "",
+            COMPANY_PHONE_NUMBER
+        )
+        executeApiCallUseCase(
+            viewModelScope = viewModelScope,
+            useCase = appointmentsUseCaseFactory.createCustomerUseCase,
+            inputValue = request,
+            callback = { result ->
+                if (signInMethod == SignInMethod.SIGN_IN){
+                    _signInResponse.value = OnResultObtained(
+                        signInResult.apply { squareCustomerID = result.customer_id },
+                        true
+                    )
+                    appPreferences.signInUser = signInResult
+                }else {
+                    _signUpResponse.value = OnResultObtained(signInResult, true)
+                    appPreferences.signInUser = signInResult
+                }
+            },
+            onError = {
+                _signInError.value = applicationContext().getString(R.string.something_went_wrong)
+                Log.e("Result", it.message.toString())
             })
     }
 
@@ -288,35 +355,87 @@ class EutiViewModel : BaseViewModel() {
     val signInError: StateFlow<String>
         get() = _signInError
 
-    fun setSignInError(value: String){
+    fun setSignInError(value: String) {
         _signInError.value = value
     }
 
     /** @SetAppointmentDate*/
-    val _selectedAppointmentDate = MutableStateFlow("")
+    private val _selectedAppointmentDate = MutableStateFlow("")
     val selectedAppointmentDate: StateFlow<String>
         get() = _selectedAppointmentDate
 
-    fun setAppointmentDate(value: String){
+    fun setAppointmentDate(value: String) {
         _selectedAppointmentDate.value = value
     }
 
-    /** @AvailableDates*/
+    /** @AvailableDates Local*/
 
-    fun getAvailableDates():HashSet<CalendarDay>{
+    fun getAvailableDates(): HashSet<CalendarDay> {
         val availableDates = mutableSetOf<CalendarDay>()
         val startCal = Calendar.getInstance()
         val start = startCal.get(Calendar.DATE)
-        startCal.set(Calendar.DATE,startCal.get(Calendar.DATE).plus(7))
+        startCal.set(Calendar.DATE, startCal.get(Calendar.DATE).plus(7))
         val lastIndex = startCal.get(Calendar.DATE)
-        Log.e("Start-last","$start + $lastIndex")
-        (start..lastIndex).forEach {day ->
+        Log.e("Start-last", "$start + $lastIndex")
+        (start..lastIndex).forEach { day ->
             val c1 = Calendar.getInstance()
-            c1.set(Calendar.DATE,day)
+            c1.set(Calendar.DATE, day)
             availableDates.add(c1.toCalendarDay())
         }
         return availableDates.toHashSet()
     }
+
+    /** @GetAvailableTimes Server*/
+
+    fun getTeamMembersLocal(){
+        executeLocalUseCase(
+            viewModelScope = viewModelScope,
+            useCase = appointmentsUseCaseFactory.getTeamMembersUseCase,
+            inputValue = Unit,
+            callback = { result ->
+                Log.e("Result-Success", result.toString())
+
+            }, onError = {
+                //assign to error variable
+                it.printStackTrace()
+                Log.e("Error", it.toString())
+            })
+    }
+
+    fun getTeamMemberAvailableTimes(){
+
+    }
+
+
+    /** @AvailableTimes*/
+    private val _appointmentTimes = MutableStateFlow(mapOf<String,String>())
+    val appointmentTimes: StateFlow<Map<String, String>>
+        get() = _appointmentTimes
+
+
+    fun getAvailableTimes(){
+        val availableTimePair: MutableMap<String, String> = mutableMapOf()
+        val dateFormat = SimpleDateFormat(
+            "hh:mm a",
+            Locale.getDefault()
+        )
+        try {
+            (8..17).forEach { start ->
+                val c1 = Calendar.getInstance()
+                val timeOfDay = if (start < 12) "am" else "pm"
+                c1.time =  dateFormat.parse("$start:00 $timeOfDay")!!
+
+                val c2 = Calendar.getInstance()
+                c2.time =  dateFormat.parse("$start:45 $timeOfDay")!!
+                availableTimePair[dateFormat.format(c1.time)] = dateFormat.format(c2.time)
+            }
+        }catch (e:Exception){
+            Log.e("","")
+        }
+
+        _appointmentTimes.value = availableTimePair
+    }
+
 
 
 }

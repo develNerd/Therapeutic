@@ -9,6 +9,7 @@ import com.flepper.therapeutic.data.repositories.*
 import com.flepper.therapeutic.data.reposositoryimpl.AppointmentsRepositoryImpl
 import com.flepper.therapeutic.data.reposositoryimpl.AuthRepositoryImpl
 import com.flepper.therapeutic.data.reposositoryimpl.EventsRepositoryImp
+import com.flepper.therapeutic.data.usecasefactories.AppointmentsUseCaseFactory
 import com.flepper.therapeutic.data.usecasefactories.AuthUseCaseFactory
 import com.flepper.therapeutic.data.usecasefactories.HomeUseCaseFactory
 import com.flepper.therapeutic.data.usecases.CodeUseCase
@@ -32,12 +33,13 @@ val repositoryModule = module {
     single<TestRepository> { TestRepositoryImpl(get()) }
     single<EventsRepository> { EventsRepositoryImp(get(),get()) }
     single<AuthRepository> { AuthRepositoryImpl() }
-    single<AppointmentsRepository> { AppointmentsRepositoryImpl(get()) }
+    single<AppointmentsRepository> { AppointmentsRepositoryImpl(get(),get()) }
 }
 
 val useCaseFactoryModule = module {
     single { CodeUseCase(get(),get()) }
     single { HomeUseCaseFactory(get(),get()) }
     single { AuthUseCaseFactory(get(),get()) }
+    single { AppointmentsUseCaseFactory(get(),get()) }
 }
 

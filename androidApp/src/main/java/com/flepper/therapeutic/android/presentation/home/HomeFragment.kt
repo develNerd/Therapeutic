@@ -81,6 +81,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
         homeViewModel.getFeaturedContent()
         homeViewModel.getEvents()
         homeViewModel.appPreferences.isBeenToDashboard = true
+        mainActivityViewModel.getTeamMembers()
         binding.composeView.apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {

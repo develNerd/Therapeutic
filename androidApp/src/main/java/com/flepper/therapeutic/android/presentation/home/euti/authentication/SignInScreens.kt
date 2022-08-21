@@ -28,6 +28,7 @@ import com.flepper.therapeutic.android.R
 import com.flepper.therapeutic.android.presentation.home.euti.EutiChatType
 import com.flepper.therapeutic.android.presentation.home.euti.EutiScreens
 import com.flepper.therapeutic.android.presentation.home.euti.EutiViewModel
+import com.flepper.therapeutic.android.presentation.home.euti.MAIN_SHEET
 import com.flepper.therapeutic.android.presentation.theme.*
 import com.flepper.therapeutic.android.presentation.widgets.*
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
@@ -174,7 +175,9 @@ fun RegistrationScreen(eutiViewModel: EutiViewModel, navController: NavControlle
                         )
                     }
                     MediumTextBold(text = stringResource(id = R.string.or))
-                    SignInWithGoogleButton(eutiViewModel)
+                    SignInWithGoogleButton(eutiViewModel,showButtonLoading){
+                        showButtonLoading = true
+                    }
                 }
 
 
@@ -182,6 +185,22 @@ fun RegistrationScreen(eutiViewModel: EutiViewModel, navController: NavControlle
 
 
         }
+
+        fun navigate(){
+            navController.popBackStack(MAIN_SHEET,false)
+            navController.navigate(EutiScreens.ScheduleSessionDateScreen(eutiViewModel).screenName)
+        }
+
+        LaunchedEffect(key1 = signInResponse.isLoaded || signUpResponse.isLoaded, block = {
+            if (signInResponse.isLoaded && signInResponse.result != null){
+                navigate()
+            }
+            if (signUpResponse.isLoaded && signUpResponse.result != null){
+                navigate()
+            }
+        })
+
+
 
         /** @ErrorSnackBar*/
         if (signInError.isNotEmpty()){
@@ -267,7 +286,7 @@ fun LoginOrSignUpButtonScreen(navController: NavController,eutiViewModel: EutiVi
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun SignInWithGoogleButton(eutiViewModel: EutiViewModel,isLoading:Boolean = false) {
+fun SignInWithGoogleButton(eutiViewModel: EutiViewModel,isLoading:Boolean = false,setShowLoading:(Boolean) -> Unit) {
     val context = LocalContext.current
     val oneTapClient =  Identity.getSignInClient(context)
     val REQ_ONE_TAP = 2  // Can be any integer unique to the Activity
@@ -289,6 +308,7 @@ fun SignInWithGoogleButton(eutiViewModel: EutiViewModel,isLoading:Boolean = fals
             .padding(horizontal = smallPadding, vertical = mediumPadding),
         backgroundColor = MaterialTheme.colors.background,
         onClick = {
+            setShowLoading(true)
             oneTapClient.beginSignIn(signInWithGoogle())
                 .addOnSuccessListener((context as Activity)
                 ) { result ->

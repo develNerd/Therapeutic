@@ -12,6 +12,7 @@ val key: String = gradleLocalProperties(rootDir).getProperty("WEB_CLIENT_API_KEY
 // TODO(To prevent token from being revoked referesh on server every week)
 val squareDefAccessToken: String = gradleLocalProperties(rootDir).getProperty("SQUARE_ACCESS_TOKEN")
 val squareDefRefreshToken: String = gradleLocalProperties(rootDir).getProperty("SQUARE_REFRESH_TOKEN")
+val therapy_session_id:String = gradleLocalProperties(rootDir).getProperty("THERAPY_SESSION_CATALOG_ITEM_ID")
 
 
 android {
@@ -54,6 +55,7 @@ android {
             buildConfigField("String", "WEB_CLIENT_API_KEY", key)
             buildConfigField("String", "SQUARE_ACCESS_TOKEN", squareDefAccessToken)
             buildConfigField("String", "SQUARE_REFRESH_TOKEN", squareDefRefreshToken)
+            buildConfigField("String", "THERAPY_SESSION_CATALOG_ITEM_ID", therapy_session_id)
         }
     }
 

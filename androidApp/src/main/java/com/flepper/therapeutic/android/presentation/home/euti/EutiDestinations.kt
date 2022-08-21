@@ -6,6 +6,7 @@ import com.flepper.therapeutic.android.presentation.home.HomeViewModel
 import com.flepper.therapeutic.android.presentation.home.euti.authentication.LoginOrSignUpButtonScreen
 import com.flepper.therapeutic.android.presentation.home.euti.authentication.RegistrationScreen
 import com.flepper.therapeutic.android.presentation.home.euti.schedule.SelectDateScreen
+import com.flepper.therapeutic.android.presentation.home.euti.schedule.SelectScheduleTime
 
 
 enum class SheetContentType {
@@ -18,7 +19,7 @@ enum class SheetContentType {
 }
 
 data class EutiMainSheetItem(val name: String, val icon: Int, val type: SheetContentType)
-
+const val MAIN_SHEET = "Main Sheet"
 sealed class EutiScreens(
     var screenName: String,
     var bottomSheetContent: @Composable (NavController) -> Unit
@@ -76,5 +77,7 @@ sealed class EutiScreens(
     class ScheduleSessionDateScreen(eutiViewModel: EutiViewModel) :
         EutiScreens("ScheduleSessionScreen", bottomSheetContent = { nav -> SelectDateScreen(nav,eutiViewModel)  })
 
+
+    class ScheduleSessionTimeScreen(eutiViewModel: EutiViewModel) : EutiScreens("ScheduleTimeScreen", bottomSheetContent = {nav -> SelectScheduleTime(nav,eutiViewModel)})
 
 }

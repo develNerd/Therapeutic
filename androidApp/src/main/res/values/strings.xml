@@ -51,6 +51,10 @@
     <string name="to_schedule_req_sign_up">Or Sign up if you do not have an account with us</string>
     <string name="email">Email</string>
     <string name="something_went_wrong">Something went wrong please try again</string>
+    <string name="select_appointment_time">Please select appointment time for %1$s</string>
+    <string name="select_date">Select Date</string>
+    <string name="checking_for_time_availabity">Checking for time availability</string>
+
     <string name="ok">OK</string>
 
 </resources>

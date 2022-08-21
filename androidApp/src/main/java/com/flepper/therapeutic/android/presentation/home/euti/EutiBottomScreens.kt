@@ -106,6 +106,10 @@ fun MainSheet(
                             eutiViewModel.addToReplies(eutiChat2)
                             navController.navigate(EutiScreens.ToSignUpOrSignInScreen(eutiViewModel).screenName)
                         }else{
+                            eutiViewModel.addToReplies(EutiChatType.Euti(context.getString(R.string.checking_for_time_availabity),false).apply {
+                                isHead = eutiViewModel.checkHead(this)
+                            })
+                            eutiViewModel.setIsChatLoading(true)
                             navController.navigate(EutiScreens.ScheduleSessionDateScreen(eutiViewModel).screenName)
                         }
                     }

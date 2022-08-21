@@ -76,3 +76,12 @@ fun Calendar.toCalendarDayM():CalendarDay{
     return CalendarDay.from(2022,8,20)
 }
 
+
+fun  Map<String, String>.serializeToTimeListString():List<String>{
+    val items = mutableListOf<String>()
+    this.forEach { (start, end)->
+        items.add("$start - $end")
+    }
+    return items
+}
+

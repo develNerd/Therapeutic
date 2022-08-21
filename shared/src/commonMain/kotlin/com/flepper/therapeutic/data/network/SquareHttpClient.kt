@@ -78,12 +78,14 @@ class SquareHttpClient(appPreference: AppPreference) {
 
     suspend inline fun <reified T : Any, reified Output:Any> POST(
         route: String,
-        request: T,
+        request: T? = null,
     ): Output = httpClient.post {
         url {
             protocol = URLProtocol.HTTPS
             path(route)
-            body = request
+            if (request!= null){
+                body = request
+            }
         }
     }
 

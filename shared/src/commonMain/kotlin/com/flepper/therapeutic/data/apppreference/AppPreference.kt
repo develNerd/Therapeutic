@@ -1,7 +1,7 @@
 package com.flepper.therapeutic.data.apppreference
 
-import com.flepper.therapeutic.data.SignInUser
-import com.flepper.therapeutic.data.User
+import com.flepper.therapeutic.data.CurrentUser
+import com.flepper.therapeutic.data.AnonUser
 import com.flepper.therapeutic.data.apppreference.KMMPreference.getBool
 import com.flepper.therapeutic.data.apppreference.KMMPreference.getInt
 import com.flepper.therapeutic.data.apppreference.KMMPreference.getString
@@ -19,20 +19,21 @@ class AppPreference(private val context: KMMContext) {
     private val SIGN_IN_USER = "SIGN_IN_USER"
     private val IS_DASHBOARD = "IS_DASHBOARD"
     private val ACCESS_TOKEN = "ACCESS_TOKEN"
-    private val REFRESH_TOKEN = "ACCESS_TOKEN"
+    private val REFRESH_TOKEN = "REFRESH_TOKEN"
+    private val IS_TEAM_MEMBERS_SAVED = "isTeamMembersSaved"
 
 
-    var anonUser: User?
+    var anonUser: AnonUser?
         get() {
-            return context.getString(CURRENT_USER)?.let { Json.decodeFromString<User>(it) }
+            return context.getString(CURRENT_USER)?.let { Json.decodeFromString<AnonUser>(it) }
         }
         set(value) {
             context.putString(CURRENT_USER, Json.encodeToString(value))
         }
 
-    var signInUser: SignInUser?
+    var signInUser: CurrentUser?
         get() {
-            return context.getString(SIGN_IN_USER)?.let { Json.decodeFromString<SignInUser>(it) }
+            return context.getString(SIGN_IN_USER)?.let { Json.decodeFromString<CurrentUser>(it) }
         }
         set(value) {
             context.putString(SIGN_IN_USER, Json.encodeToString(value))
@@ -55,6 +56,10 @@ class AppPreference(private val context: KMMContext) {
     var isBeenToDashboard: Boolean
         get() = context.getBool(IS_DASHBOARD, false)
         set(value) = context.putBool(IS_DASHBOARD, value)
+
+    var isTeamMembersSaved: Boolean
+        get() = context.getBool(IS_TEAM_MEMBERS_SAVED, false)
+        set(value) = context.putBool(IS_TEAM_MEMBERS_SAVED, value)
 
 
     fun put(key: String, value: Int) {
