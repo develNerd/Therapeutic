@@ -5,6 +5,8 @@ import com.flepper.therapeutic.data.TherapeuticDb
 import com.flepper.therapeutic.data.models.*
 import com.flepper.therapeutic.data.models.appointments.SearchAvailabilityRequest
 import com.flepper.therapeutic.data.models.appointments.availabletimeresponse.AvailableTeamMemberTime
+import com.flepper.therapeutic.data.models.appointments.booking.BookAppointmentResponse
+import com.flepper.therapeutic.data.models.appointments.booking.BookingRequest
 import com.flepper.therapeutic.data.models.customer.Customer
 import com.flepper.therapeutic.data.models.customer.CustomerResponse
 import com.flepper.therapeutic.data.models.customer.SearchCustomer
@@ -16,18 +18,21 @@ import io.realm.kotlin.ext.asFlow
 import io.realm.kotlin.ext.query
 import kotlinx.coroutines.flow.map
 
-class AppointmentsRepositoryImpl(private val api: Api, therapeuticDb: TherapeuticDb) : AppointmentsRepository {
+class AppointmentsRepositoryImpl(private val api: Api, therapeuticDb: TherapeuticDb) :
+    AppointmentsRepository {
 
 
     private val db = therapeuticDb.invoke()
 
-    override suspend fun createCustomer(request: Customer): FlowResult<CustomerResponse> = makeRequestToApi{
-        api.createCustomer(request)
-    }
+    override suspend fun createCustomer(request: Customer): FlowResult<CustomerResponse> =
+        makeRequestToApi {
+            api.createCustomer(request)
+        }
 
-    override suspend fun getCustomer(request: Filter): FlowResult<CustomerResponse> = makeRequestToApi {
-        api.getCustomer(SearchCustomer(SquareSearchQuery(request)))
-    }
+    override suspend fun getCustomer(request: Filter): FlowResult<CustomerResponse> =
+        makeRequestToApi {
+            api.getCustomer(SearchCustomer(SquareSearchQuery(request)))
+        }
 
     override suspend fun getTeamMembers(): FlowResult<List<TeamMembersItem>> = makeRequestToApi {
         api.getTeamMembers()
@@ -44,11 +49,27 @@ class AppointmentsRepositoryImpl(private val api: Api, therapeuticDb: Therapeuti
 
     /** Should retun o= max of 4 team members*/
     override suspend fun getTeamMembersLocal(): FlowList<TeamMembersItem> {
-        return db.query<TeamMembersItemDao>().asFlow().map { it.list.map {item -> item.toTeamMember() } }
+        return db.query<TeamMembersItemDao>().asFlow()
+            .map { it.list.map { item -> item.toTeamMember() } }
     }
 
-    override suspend fun getTeamAvailableTimes(request: SearchAvailabilityRequest): FlowResult<List<AvailableTeamMemberTime>> = makeRequestToApi {
-        api.getTeamMembersAvailableTimes(request)
+    override suspend fun getTeamAvailableTimes(request: SearchAvailabilityRequest): FlowResult<List<AvailableTeamMemberTime>> =
+        makeRequestToApi {
+            api.getTeamMembersAvailableTimes(request)
+        }
+
+    override suspend fun bookAppointment(request: BookingRequest): FlowResult<BookAppointmentResponse> =
+        makeRequestToApi {
+            api.bookAppointment(request)
+        }
+
+    override suspend fun saveBookingLocal(request: BookAppointmentResponse) {
+        db.write {
+            copyToRealm(request.toBookAppointmentResponseDao().apply {
+                this.appointmentSegment =
+                    request.appointmentSegments?.first()?.toAppointmentSegmentItemDao()
+            }, UpdatePolicy.ALL)
+        }
     }
 
 

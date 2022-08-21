@@ -1,12 +1,13 @@
 package com.flepper.therapeutic.android.util
 
 import android.graphics.drawable.Drawable
+import android.util.Log
 import com.flepper.therapeutic.data.SQUARE_API_DATE_FORMAT
 import com.prolificinteractive.materialcalendarview.CalendarDay
 import com.prolificinteractive.materialcalendarview.DayViewDecorator
 import com.prolificinteractive.materialcalendarview.DayViewFacade
 import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.TimeZone
+import kotlinx.datetime.TimeZone.Companion.currentSystemDefault
 import kotlinx.datetime.toInstant
 import java.text.SimpleDateFormat
 import java.util.*
@@ -16,7 +17,7 @@ fun LocalDateTime.parseToMonthDayString(): String {
         "EEE, MMM d",
         Locale.getDefault()
     )
-    val date = Date(this.toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds())
+    val date = Date(this.toInstant(currentSystemDefault()).toEpochMilliseconds())
     return dateFormat.format(date)
 }
 
@@ -62,7 +63,7 @@ fun LocalDateTime.parseToHourMinuteString(): String {
         "hh:mm aa",
         Locale.getDefault()
     )
-    val date = Date(this.toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds())
+    val date = Date(this.toInstant(kotlinx.datetime.TimeZone.currentSystemDefault()).toEpochMilliseconds())
     return dateFormat.format(date)
 }
 
@@ -114,3 +115,23 @@ fun  Map<String, String>.serializeToTimeListString():List<String>{
     return items
 }
 
+fun String.convertUTCTimeToSystemDefault():Calendar{
+    return try {
+        val sourceFormat = SimpleDateFormat(SQUARE_API_DATE_FORMAT, Locale.getDefault())
+        sourceFormat.timeZone = TimeZone.getTimeZone("UTC")
+        val parsed = sourceFormat.parse(this) // => Date is in UTC now, which is default business time
+
+        val tz = TimeZone.getDefault()
+        val destFormat = SimpleDateFormat(SQUARE_API_DATE_FORMAT, Locale.getDefault())
+        destFormat.timeZone = tz
+        val resultString = destFormat.format(parsed!!)
+        val cal =  Calendar.getInstance()
+        cal.time = destFormat.parse(resultString)!!
+        cal
+    }catch (e:Exception){
+        e.printStackTrace()
+        Log.e("Date",e.message.toString())
+        Calendar.getInstance()
+    }
+
+}

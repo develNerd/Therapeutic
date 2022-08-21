@@ -4,6 +4,8 @@ import com.flepper.therapeutic.data.models.SquareSearchQuery
 import com.flepper.therapeutic.data.models.TeamMembersItem
 import com.flepper.therapeutic.data.models.appointments.SearchAvailabilityRequest
 import com.flepper.therapeutic.data.models.appointments.availabletimeresponse.AvailableTeamMemberTime
+import com.flepper.therapeutic.data.models.appointments.booking.BookAppointmentResponse
+import com.flepper.therapeutic.data.models.appointments.booking.BookingRequest
 import com.flepper.therapeutic.data.models.customer.Customer
 import com.flepper.therapeutic.data.models.customer.CustomerResponse
 import com.flepper.therapeutic.data.models.customer.SearchCustomer
@@ -25,5 +27,11 @@ class Api(private val squareHttpClient: SquareHttpClient) {
     suspend fun getTeamMembersAvailableTimes(request: SearchAvailabilityRequest):List<AvailableTeamMemberTime>{
         return squareHttpClient.POST(SEARCH_AVAILABILITY,request)
     }
+
+    suspend fun bookAppointment(request: BookingRequest):BookAppointmentResponse{
+        return squareHttpClient.POST(BOOK_APPOINTMENT,request)
+    }
+
+
 
 }

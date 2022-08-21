@@ -14,6 +14,10 @@ import com.flepper.therapeutic.data.apppreference.AppPreference
 import com.flepper.therapeutic.data.models.Filter
 import com.flepper.therapeutic.data.models.WorldWideEvent
 import com.flepper.therapeutic.data.models.appointments.*
+import com.flepper.therapeutic.data.models.appointments.booking.AppointmentSegmentsItem
+import com.flepper.therapeutic.data.models.appointments.booking.BookAppointmentResponse
+import com.flepper.therapeutic.data.models.appointments.booking.Booking
+import com.flepper.therapeutic.data.models.appointments.booking.BookingRequest
 import com.flepper.therapeutic.data.models.customer.Customer
 import com.flepper.therapeutic.data.models.customer.ReferenceId
 import com.flepper.therapeutic.data.usecasefactories.AppointmentsUseCaseFactory
@@ -237,10 +241,11 @@ class EutiViewModel : BaseViewModel() {
             state = _signUpResponse,
             callback = { result ->
                 Log.e("Result", result.toString())
-                getCustomer(result.id, result,SignInMethod.SIGN_UP)
+                getCustomer(result.id, result, SignInMethod.SIGN_UP)
             }, onError = {
                 //assign to error variable
-                _eutiGenericError.value = applicationContext().getString(R.string.something_went_wrong)
+                _eutiGenericError.value =
+                    applicationContext().getString(R.string.something_went_wrong)
 
             })
     }
@@ -268,7 +273,8 @@ class EutiViewModel : BaseViewModel() {
                 appPreferences.signInUser = result
             }, onError = {
                 //assign to error variable
-                _eutiGenericError.value = applicationContext().getString(R.string.something_went_wrong)
+                _eutiGenericError.value =
+                    applicationContext().getString(R.string.something_went_wrong)
             })
     }
 
@@ -281,17 +287,22 @@ class EutiViewModel : BaseViewModel() {
             callback = { result ->
                 Log.e("Result", result.toString())
                 // _signInResponse.value = OnResultObtained(result, true)
-                getCustomer(result.id, result,SignInMethod.SIGN_IN)
+                getCustomer(result.id, result, SignInMethod.SIGN_IN)
             }, onError = {
                 //assign to error variable
-                _eutiGenericError.value = applicationContext().getString(R.string.something_went_wrong)
+                _eutiGenericError.value =
+                    applicationContext().getString(R.string.something_went_wrong)
             })
     }
 
     /** @GetCustomer*/
 
     /** Get Customer if customer does not exist and return if exists */
-    private fun getCustomer(referenceId: String, signInResult: CurrentUser,signInMethod: SignInMethod) {
+    private fun getCustomer(
+        referenceId: String,
+        signInResult: CurrentUser,
+        signInMethod: SignInMethod
+    ) {
         val request = Filter(referenceId = ReferenceId(referenceId))
         executeApiCallUseCase(
             viewModelScope = viewModelScope,
@@ -299,13 +310,13 @@ class EutiViewModel : BaseViewModel() {
             inputValue = request,
             callback = { result ->
                 Log.e("Result", result.toString())
-                if (signInMethod == SignInMethod.SIGN_IN){
+                if (signInMethod == SignInMethod.SIGN_IN) {
                     _signInResponse.value = OnResultObtained(
                         signInResult.apply { squareCustomerID = result.customer_id },
                         true
                     )
                     appPreferences.signInUser = signInResult
-                }else {
+                } else {
                     _signUpResponse.value = OnResultObtained(signInResult, true)
                     appPreferences.signInUser = signInResult
                 }
@@ -313,14 +324,14 @@ class EutiViewModel : BaseViewModel() {
             },
             onError = {
                 /** Create if customer does not exist*/
-                createCustomer(referenceId,signInResult,signInMethod)
+                createCustomer(referenceId, signInResult, signInMethod)
                 Log.e("Result", it.message.toString())
             })
     }
 
     /** @CreateCustomer */
 
-    fun createCustomer( referenceId: String,signInResult:CurrentUser,signInMethod: SignInMethod) {
+    fun createCustomer(referenceId: String, signInResult: CurrentUser, signInMethod: SignInMethod) {
         val request = Customer(
             signInResult.email,
             referenceId,
@@ -335,19 +346,20 @@ class EutiViewModel : BaseViewModel() {
             useCase = appointmentsUseCaseFactory.createCustomerUseCase,
             inputValue = request,
             callback = { result ->
-                if (signInMethod == SignInMethod.SIGN_IN){
+                if (signInMethod == SignInMethod.SIGN_IN) {
                     _signInResponse.value = OnResultObtained(
                         signInResult.apply { squareCustomerID = result.customer_id },
                         true
                     )
                     appPreferences.signInUser = signInResult
-                }else {
+                } else {
                     _signUpResponse.value = OnResultObtained(signInResult, true)
                     appPreferences.signInUser = signInResult
                 }
             },
             onError = {
-                _eutiGenericError.value = applicationContext().getString(R.string.something_went_wrong)
+                _eutiGenericError.value =
+                    applicationContext().getString(R.string.something_went_wrong)
                 Log.e("Result", it.message.toString())
             })
     }
@@ -389,17 +401,19 @@ class EutiViewModel : BaseViewModel() {
 
     /** @GetAvailableTimes Server*/
 
-    fun getTeamMembersLocal(){
+    fun getTeamMembersAvailableTime() {
         executeLocalFlowUseCase(
             viewModelScope = viewModelScope,
             useCase = appointmentsUseCaseFactory.getTeamMembersLocalUseCase,
             inputValue = Unit,
             callback = { result ->
                 Log.e("Result-Success", result.toString())
-                val startAt = _selectedAppointmentDate.value.toAppointmentStartCalendar().time.asSquareApiDateString()
-                val endAt =_selectedAppointmentDate.value.toAppointmentEndCalendar().time.asSquareApiDateString()
+                val startAt =
+                    _selectedAppointmentDate.value.toAppointmentStartCalendar().time.asSquareApiDateString()
+                val endAt =
+                    _selectedAppointmentDate.value.toAppointmentEndCalendar().time.asSquareApiDateString()
                 val startAtRange = StartAtRange(startAt = startAt, endAt = endAt)
-                getTeamMemberAvailableTimes(startAtRange,result.map { it.id })
+                getAvailableTimes(startAtRange, result.map { it.id })
             }, onError = {
                 //assign to error variable
                 it.printStackTrace()
@@ -407,32 +421,69 @@ class EutiViewModel : BaseViewModel() {
             })
     }
 
+    val teamMemberTimeAndIdPair: MutableMap<String, String> = mutableMapOf()
 
-
-    private fun getTeamMemberAvailableTimes(startAtRange: StartAtRange, teamMemberIds:List<String>){
-        val segmentFilters  = SegmentFiltersItem(serviceVariationId = BuildConfig.THERAPY_SESSION_CATALOG_ITEM_ID, teamMemberIdFilter = TeamMemberIdFilter(teamMemberIds))
-        val appointmentsFilter = AppointmentsFilter(bookingId = "",startAtRange, listOf(segmentFilters), locationId = BuildConfig.DEFAULT_TEST_LOCATION_ID)
+    private fun getAvailableTimes(
+        startAtRange: StartAtRange,
+        teamMemberIds: List<String>
+    ) {
+        val segmentFilters = SegmentFiltersItem(
+            serviceVariationId = BuildConfig.THERAPY_SESSION_CATALOG_ITEM_ID,
+            teamMemberIdFilter = TeamMemberIdFilter(teamMemberIds)
+        )
+        val appointmentsFilter = AppointmentsFilter(
+            bookingId = "",
+            startAtRange,
+            listOf(segmentFilters),
+            locationId = BuildConfig.DEFAULT_TEST_LOCATION_ID
+        )
         val request = SearchAvailabilityRequest(AvailabilityQuery(appointmentsFilter))
         executeApiCallUseCase(
             viewModelScope = viewModelScope,
             useCase = appointmentsUseCaseFactory.getAvailableTimeUseCase,
             inputValue = request,
-            callback = { result ->
-
+            callback = { availableTimes ->
+                val availableTimePair: MutableMap<String, String> = mutableMapOf()
+                availableTimes.forEach { availableTime ->
+                    val hourMinuteFormat = SimpleDateFormat(
+                        "hh:mm a",
+                        Locale.getDefault()
+                    )
+                    val cal = Calendar.getInstance()
+                    cal.timeInMillis = availableTime.convertStartToUserTimeZone()
+                    /** Filter for if minute is 30*/
+                    if (cal.get(Calendar.MINUTE) != 30) {
+                        val c1 = availableTime.startAt.convertUTCTimeToSystemDefault()
+                        val end = availableTime.startAt.convertUTCTimeToSystemDefault()
+                        // set duration for end
+                        end.set(
+                            Calendar.MINUTE,
+                            availableTime.appointmentSegments?.first()?.durationMinutes ?: 45
+                        )
+                        val c2 = end
+                        availableTimePair[hourMinuteFormat.format(c1.time)] =
+                            hourMinuteFormat.format(c2.time)
+                        teamMemberTimeAndIdPair[hourMinuteFormat.format(c1.time)] =
+                            availableTime.appointmentSegments?.first()?.teamMemberId ?: ""
+                    }
+                }
+                _appointmentTimes.value = availableTimePair
             },
             onError = {
-                _eutiGenericError.value = applicationContext().getString(R.string.something_went_wrong)
+                _eutiGenericError.value =
+                    applicationContext().getString(R.string.something_went_wrong)
             })
     }
 
 
     /** @AvailableTimes*/
-    private val _appointmentTimes = MutableStateFlow(mapOf<String,String>())
+    private val _appointmentTimes = MutableStateFlow(mapOf<String, String>())
     val appointmentTimes: StateFlow<Map<String, String>>
         get() = _appointmentTimes
 
+    /** Not in use anymore*/
 
-    fun getAvailableTimes(){
+    fun getAvailableTimesLocalTest() {
         val availableTimePair: MutableMap<String, String> = mutableMapOf()
         val dateFormat = SimpleDateFormat(
             "hh:mm a",
@@ -442,19 +493,111 @@ class EutiViewModel : BaseViewModel() {
             (8..17).forEach { start ->
                 val c1 = Calendar.getInstance()
                 val timeOfDay = if (start < 12) "am" else "pm"
-                c1.time =  dateFormat.parse("$start:00 $timeOfDay")!!
+                c1.time = dateFormat.parse("$start:00 $timeOfDay")!!
 
                 val c2 = Calendar.getInstance()
-                c2.time =  dateFormat.parse("$start:45 $timeOfDay")!!
+                c2.time = dateFormat.parse("$start:45 $timeOfDay")!!
                 availableTimePair[dateFormat.format(c1.time)] = dateFormat.format(c2.time)
             }
-        }catch (e:Exception){
-            Log.e("","")
+        } catch (e: Exception) {
+            Log.e("", "")
         }
 
         _appointmentTimes.value = availableTimePair
     }
 
 
+    /** @SelectedAppointmentTime*/
+
+    private var selectedTeamberId = ""
+
+    private val _selectedAppointmentTime = MutableStateFlow("")
+    val selectedAppointmentTime: MutableStateFlow<String>
+        get() = _selectedAppointmentTime
+
+    fun setSelectedAppointmentTime(value: String) {
+        _selectedAppointmentTime.value = value
+    }
+
+    /** @BookAppointment Finally Book an Appointment*/
+    fun bookAppointment() {
+        val timeKey = _selectedAppointmentTime.value.split("-").first().toString().trim()
+
+        /** timekey is expected to be 8:00 am*/
+        val startAt = toSquareApiStartAt(_selectedAppointmentDate.value, timeKey)
+
+        val teamMemberId = teamMemberTimeAndIdPair[timeKey]
+        val appointmentSegment = AppointmentSegmentsItem(
+            DEFAULT_SESSION_DURATION,
+            teamMemberId ?: "",
+            false,
+            0,
+            DEFAULT_SERVICE_VERSION,
+            BuildConfig.THERAPY_SESSION_CATALOG_ITEM_ID
+        )
+        val booking = Booking(
+            listOf(appointmentSegment),
+            DEFAULT_CUSTOMER_NOTE,
+            appPreferences.signInUser?.id ?: "",
+            startAt,
+            DEFAULT_LOCATION_TYPE,
+            BuildConfig.DEFAULT_TEST_LOCATION_ID
+        )
+        val request = BookingRequest(booking)
+        executeApiCallUseCase(
+            viewModelScope = viewModelScope,
+            useCase = appointmentsUseCaseFactory.bookAppointmentUseCase,
+            inputValue = request,
+            callback = { result ->
+                saveBookingLocal(result)
+            },
+            onError = {
+                _eutiGenericError.value =
+                    applicationContext().getString(R.string.something_went_wrong)
+            })
+    }
+
+
+    /** @SaveBookingLocal*/
+    private val _bookingSuccess = MutableStateFlow(false)
+
+    val bookingSuccess: MutableStateFlow<Boolean>
+        get() = _bookingSuccess
+
+    fun setBookingFailed(){
+        _bookingSuccess.value = false
+    }
+
+    fun saveBookingLocal(request: BookAppointmentResponse){
+        executeLocalUseCase(
+            viewModelScope = viewModelScope,
+            useCase = appointmentsUseCaseFactory.saveBookingLocal,
+            inputValue = request,
+            callback = { result ->
+                Log.e("Result-Success", "Yay")
+                _bookingSuccess.value = true
+
+            }, onError = {
+                //assign to error variable
+                setBookingFailed()
+                it.printStackTrace()
+                Log.e("Error", it.toString())
+            })
+    }
+
+    private fun toSquareApiStartAt(calendarDay: CalendarDay, startTime: String): String {
+        val startAtCal = Calendar.getInstance()
+        startAtCal.set(Calendar.YEAR, calendarDay.year)
+        startAtCal.set(Calendar.MONTH, calendarDay.month)
+        startAtCal.set(Calendar.DATE, calendarDay.day)
+        startAtCal.set(Calendar.HOUR_OF_DAY, startTime.split(":").first().trim().toInt())
+        startAtCal.set(Calendar.MINUTE, 0)
+        startAtCal.set(Calendar.SECOND, 0)
+        startAtCal.set(Calendar.MILLISECOND, 0)
+
+        val sourceFormat = SimpleDateFormat(SQUARE_API_DATE_FORMAT, Locale.getDefault())
+        sourceFormat.timeZone = TimeZone.getTimeZone("UTC")
+        return sourceFormat.format(startAtCal.time) // => Date is in UTC now, which is default business time
+    }
 
 }

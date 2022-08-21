@@ -28,7 +28,9 @@ class EventsRepositoryImp(private val fireStore: FirebaseFirestore, therapeuticD
     override suspend fun saveWorldWideEvent(worldWideEvent: WorldWideEvent) {
         Logger.e("Dao" + worldWideEvent.toString())
         db.write {
-            copyToRealm(worldWideEvent.getDAO(),UpdatePolicy.ALL)
+            copyToRealm(worldWideEvent.getDAO().apply {
+                   hosts = worldWideEvent.getDAO().hosts
+            },UpdatePolicy.ALL)
         }
     }
 

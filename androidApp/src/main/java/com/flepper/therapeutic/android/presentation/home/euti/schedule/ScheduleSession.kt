@@ -3,10 +3,6 @@ package com.flepper.therapeutic.android.presentation.home.euti.schedule
 import android.util.Log
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -16,11 +12,9 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.lerp
 import androidx.compose.ui.viewinterop.AndroidViewBinding
 import androidx.core.content.res.ResourcesCompat
 import androidx.navigation.NavController
@@ -29,19 +23,13 @@ import com.flepper.therapeutic.android.databinding.ScheduleSessionCalendarViewBi
 import com.flepper.therapeutic.android.presentation.home.euti.EutiChatType
 import com.flepper.therapeutic.android.presentation.home.euti.EutiScreens
 import com.flepper.therapeutic.android.presentation.home.euti.EutiViewModel
-import com.flepper.therapeutic.android.presentation.home.euti.MAIN_SHEET
 import com.flepper.therapeutic.android.presentation.theme.*
 import com.flepper.therapeutic.android.presentation.widgets.MediumTextBold
 import com.flepper.therapeutic.android.presentation.widgets.RoundedCornerButton
 import com.flepper.therapeutic.android.util.*
 import com.google.accompanist.pager.ExperimentalPagerApi
-import com.google.accompanist.pager.HorizontalPager
-import com.google.accompanist.pager.VerticalPager
-import com.google.accompanist.pager.calculateCurrentOffsetForPage
 import com.prolificinteractive.materialcalendarview.CalendarDay
-import java.time.LocalDate
 import java.util.*
-import kotlin.math.absoluteValue
 
 @Composable
 fun SelectDateScreen(navController: NavController, eutiViewModel: EutiViewModel) {
@@ -106,7 +94,7 @@ fun SelectDateScreen(navController: NavController, eutiViewModel: EutiViewModel)
                 this.isHead = eutiViewModel.checkHead(this)
             }
             eutiViewModel.addToReplies(eutiChat)
-            eutiViewModel.getAvailableTimes()
+            eutiViewModel.getTeamMembersAvailableTime()
             navController.navigate(EutiScreens.ScheduleSessionTimeScreen(eutiViewModel).screenName)
         }
     }
@@ -132,9 +120,7 @@ fun SelectScheduleTime(navController: NavController, eutiViewModel: EutiViewMode
         val appointmentTimes = eutiViewModel.appointmentTimes.collectAsState().value.serializeToTimeListString()
 
 
-        var currentAvailableTime by remember {
-            mutableStateOf("")
-        }
+        val currentAvailableTime by eutiViewModel.selectedAppointmentTime.collectAsState()
 
 
         Column(modifier = Modifier
@@ -143,7 +129,7 @@ fun SelectScheduleTime(navController: NavController, eutiViewModel: EutiViewMode
             mediumPadding)){
             appointmentTimes.forEachIndexed { index, item ->
                 AvailableTimeItem(availableTime = item,currentAvailableTime == item){current ->
-                    currentAvailableTime = current
+                    eutiViewModel.setSelectedAppointmentTime(current)
                 }
             }
         }
