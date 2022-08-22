@@ -1,21 +1,20 @@
 package com.flepper.therapeutic.data.repositories
 
 import com.flepper.therapeutic.data.SignInRequest
-import com.flepper.therapeutic.data.SignInUser
+import com.flepper.therapeutic.data.CurrentUser
 import com.flepper.therapeutic.data.SignUpRequest
-import dev.gitlive.firebase.auth.AuthCredential
 import kotlinx.coroutines.flow.Flow
 
 interface AuthRepository {
     suspend fun signInWithEmailAndPassword(
         signInRequest: SignInRequest
-    ): Flow<SignInUser>
+    ): Flow<CurrentUser>
 
     suspend fun signUp(
         signUpRequest: SignUpRequest
-    ): Flow<SignInUser>
+    ): Flow<CurrentUser>
 
     suspend fun signInWithGoogle(
         idToken:String
-    ): Flow<SignInUser>
+    ): Flow<CurrentUser>
 }

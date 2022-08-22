@@ -1,12 +1,10 @@
 package com.flepper.therapeutic.android.presentation.home.euti
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Button
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
@@ -24,7 +22,6 @@ import com.flepper.therapeutic.android.R
 import com.flepper.therapeutic.android.presentation.home.HomeViewModel
 import com.flepper.therapeutic.android.presentation.theme.*
 import com.flepper.therapeutic.android.presentation.widgets.MediumTextBold
-import com.flepper.therapeutic.android.presentation.widgets.RoundedCornerButtonWithIcon
 import java.util.*
 
 
@@ -51,7 +48,9 @@ fun MainSheet(
         var optionId by remember {
             mutableStateOf(UUID.randomUUID().toString())
         }
+        val coroutinesScope = rememberCoroutineScope()
         val context = LocalContext.current
+        val localSession by homeViewModel.localSession.collectAsState()
         items.forEachIndexed { index, mainSheetItem ->
             MainSheetItem(item = mainSheetItem) { currentItem ->
                 when (currentItem.type) {
@@ -66,11 +65,12 @@ fun MainSheet(
                         eutiViewModel.setOptionBottomId(optionId)
                         val eutiChat = EutiChatType.Content(
                             eutiViewModel.currentOptionID.value,
-                            emptyList(), SheetContentType.ONGOING_EVENTS
+                            emptyList(), emptyList() ,SheetContentType.ONGOING_EVENTS
                         )
                         eutiViewModel.setIsChatLoading(true)
                         eutiViewModel.setCurrentEutiType(eutiChat)
                         eutiViewModel.getOnGoingEvents(true)
+
                     }
                     SheetContentType.UPCOMING_EVENTS -> {
                         val chat = EutiChatType.User(currentItem.name, false).apply {
@@ -84,30 +84,55 @@ fun MainSheet(
                         val eutiChat = EutiChatType.Content(
                             optionId,
                             emptyList(),
+                            listOf(),
                             SheetContentType.UPCOMING_EVENTS
                         )
                         eutiViewModel.setIsChatLoading(true)
                         eutiViewModel.setCurrentEutiType(eutiChat)
                         eutiViewModel.getOnGoingEvents(false)
+
                     }
                     SheetContentType.SCHEDULE_SESSION -> {
-                        val chat = EutiChatType.User(currentItem.name, false).apply {
-                            this.isHead = eutiViewModel.checkHead(this)
-                        }
-                        eutiViewModel.addToReplies(EutiChatType.User(currentItem.name, chat.isHead))
-                        if (eutiViewModel.appPreferences.signInUser == null){
-                            val eutiChat = EutiChatType.Euti(context.getString(R.string.to_schedule_req), false).apply {
+                        if (localSession.isEmpty()){
+                            val chat = EutiChatType.User(currentItem.name, false).apply {
+                                this.isHead = eutiViewModel.checkHead(this)
+                            }
+                            eutiViewModel.addToReplies(EutiChatType.User(currentItem.name, chat.isHead))
+                            if (eutiViewModel.appPreferences.signInUser == null)
+                            {
+                                val eutiChat = EutiChatType.Euti(context.getString(R.string.to_schedule_req), false).apply {
+                                    this.isHead = eutiViewModel.checkHead(this)
+                                }
+                                eutiViewModel.addToReplies(eutiChat)
+                                val eutiChat2 = EutiChatType.Euti(context.getString(R.string.to_schedule_req_sign_up), false).apply {
+                                    this.isHead = eutiViewModel.checkHead(this)
+                                }
+                                eutiViewModel.addToReplies(eutiChat2)
+                                navController.navigate(EutiScreens.ToSignUpOrSignInScreen(eutiViewModel).screenName)
+                            }else
+                            {
+
+                                navController.navigate(EutiScreens.ScheduleSessionDateScreen(eutiViewModel).screenName)
+                            }
+                        }else{
+                            val chat = EutiChatType.User(currentItem.name, false).apply {
+                                this.isHead = eutiViewModel.checkHead(this)
+                            }
+                            val eutiChat = EutiChatType.Euti(context.getString(R.string.one_schdule), false).apply {
                                 this.isHead = eutiViewModel.checkHead(this)
                             }
                             eutiViewModel.addToReplies(eutiChat)
-                            val eutiChat2 = EutiChatType.Euti(context.getString(R.string.to_schedule_req_sign_up), false).apply {
-                                this.isHead = eutiViewModel.checkHead(this)
-                            }
-                            eutiViewModel.addToReplies(eutiChat2)
-                            navController.navigate(EutiScreens.ToSignUpOrSignInScreen(eutiViewModel).screenName)
+                            eutiViewModel.addToReplies(EutiChatType.User(currentItem.name, chat.isHead))
+                            eutiViewModel.addToReplies(EutiChatType.Content(UUID.randomUUID().toString(),
+                                listOf(),localSession,SheetContentType.SCHEDULE_SESSION))
+                            eutiViewModel.setIsChatAdded(true)
+
                         }
                     }
-                    SheetContentType.WATCH_FEATURED_VIDEOS -> {}
+                    SheetContentType.LISTEN_TO_PODCASTS -> {
+                        eutiViewModel.addToReplies(EutiChatType.Content(UUID.randomUUID().toString(),
+                            listOf(),localSession,SheetContentType.LISTEN_TO_PODCASTS))
+                    }
                     else -> {}
                 }
             }
@@ -206,4 +231,6 @@ fun GenericBottomContent(title: String, navController: NavController,eutiViewMod
 
     }
 }
+
+
 

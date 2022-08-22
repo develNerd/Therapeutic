@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.plugin.statistics.ReportStatisticsToElasticSearch.url
+
 buildscript {
 
     repositories {
@@ -17,6 +19,8 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        maven {setUrl("https://jitpack.io")}
+
     }
 }
 

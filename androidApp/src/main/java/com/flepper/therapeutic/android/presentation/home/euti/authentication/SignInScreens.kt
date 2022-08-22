@@ -10,6 +10,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,23 +20,19 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.core.app.ActivityCompat.startIntentSenderForResult
 import androidx.navigation.NavController
 import com.flepper.therapeutic.android.BuildConfig
 import com.flepper.therapeutic.android.R
 import com.flepper.therapeutic.android.presentation.home.euti.EutiChatType
 import com.flepper.therapeutic.android.presentation.home.euti.EutiScreens
 import com.flepper.therapeutic.android.presentation.home.euti.EutiViewModel
+import com.flepper.therapeutic.android.presentation.home.euti.MAIN_SHEET
 import com.flepper.therapeutic.android.presentation.theme.*
 import com.flepper.therapeutic.android.presentation.widgets.*
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
-import com.google.android.gms.auth.api.identity.BeginSignInResult
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.tasks.OnFailureListener
-import com.google.android.gms.tasks.OnSuccessListener
-import com.google.firebase.auth.GoogleAuthProvider
 import kotlinx.coroutines.delay
-import java.util.*
 
 
 /** @RegistrationScreen*/
@@ -46,7 +44,7 @@ fun RegistrationScreen(eutiViewModel: EutiViewModel, navController: NavControlle
 
     val signInResponse by eutiViewModel.signInResponse.collectAsState()
     val signUpResponse by eutiViewModel.signUpResponse.collectAsState()
-    val signInError by eutiViewModel.signInError.collectAsState()
+    val signInError by eutiViewModel.eutiGenericError.collectAsState()
 
     var userName by remember {
         mutableStateOf("")
@@ -69,6 +67,7 @@ fun RegistrationScreen(eutiViewModel: EutiViewModel, navController: NavControlle
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = smallPadding, vertical = smallPadding),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(
@@ -143,9 +142,10 @@ fun RegistrationScreen(eutiViewModel: EutiViewModel, navController: NavControlle
                     isSignInEnabled = userName.isNotEmpty() && passWord.isNotEmpty()
 
                     /** Stop showing progress bar*/
-                    if (signInResponse.isLoaded || signUpResponse.isLoaded){
+                    LaunchedEffect(key1 = signInResponse.isLoaded || signUpResponse.isLoaded, block = {
                         showButtonLoading = false
-                    }
+                    })
+
 
                     RoundedCornerButton(
                         isEnabled = if (!isSignIn) isSignUpEnabled else isSignInEnabled,
@@ -156,9 +156,9 @@ fun RegistrationScreen(eutiViewModel: EutiViewModel, navController: NavControlle
                             .fillMaxWidth()
                     ) {
                         if (isSignIn){
-                            eutiViewModel.signInUser(email = userName,passWord)
+                            eutiViewModel.signInUser(email = userName.trim(),passWord.trim())
                         }else{
-                            eutiViewModel.signUpUser(email = userName,passWord)
+                            eutiViewModel.signUpUser(email = userName.trim(),passWord.trim())
                         }
                         showButtonLoading = true
                     }
@@ -169,7 +169,9 @@ fun RegistrationScreen(eutiViewModel: EutiViewModel, navController: NavControlle
                         )
                     }
                     MediumTextBold(text = stringResource(id = R.string.or))
-                    SignInWithGoogleButton(eutiViewModel)
+                    SignInWithGoogleButton(eutiViewModel,showButtonLoading){
+                        showButtonLoading = true
+                    }
                 }
 
 
@@ -178,32 +180,52 @@ fun RegistrationScreen(eutiViewModel: EutiViewModel, navController: NavControlle
 
         }
 
+        fun navigate(){
+            navController.popBackStack(MAIN_SHEET,false)
+            navController.navigate(EutiScreens.ScheduleSessionDateScreen(eutiViewModel).screenName)
+        }
+
+        LaunchedEffect(key1 = signInResponse.isLoaded || signUpResponse.isLoaded, block = {
+            if (signInResponse.isLoaded && signInResponse.result != null){
+                navigate()
+            }
+            if (signUpResponse.isLoaded && signUpResponse.result != null){
+                navigate()
+            }
+        })
+
+
+
         /** @ErrorSnackBar*/
         if (signInError.isNotEmpty()){
+            showButtonLoading = false
             Box(modifier = Modifier
                 .fillMaxWidth()
+                .align(Alignment.BottomCenter)
                 .padding(smallPadding))
             {
-                Snackbar(modifier = Modifier.fillMaxWidth(), action = {
-                    TextButton(onClick = {
-                        eutiViewModel.setSignInError("")
-                    }) {
-                        MediumTextBold(text = stringResource(id = R.string.ok))
-                    }
-                })
+                Card(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = spacing3dp))
                 {
                     Row(
                         Modifier
                             .fillMaxWidth()
-                            .padding(smallPadding), horizontalArrangement = Arrangement.spacedBy(
+                            .padding(spacing3dp), horizontalArrangement = Arrangement.spacedBy(
                             smallPadding), verticalAlignment = Alignment.CenterVertically) {
                         MediumTextBold(text = signInError, modifier = Modifier.weight(1f))
+
+                        TextButton(onClick = {
+                            eutiViewModel.setSignInError("")
+                        }) {
+                            MediumTextBold(text = stringResource(id = R.string.ok), color = MaterialTheme.colors.primary)
+                        }
 
                     }
                 }
             }
             LaunchedEffect(key1 = true, block = {
-                delay(2000)
+                delay(3000)
                 eutiViewModel.setSignInError("")
             })
         }
@@ -258,7 +280,7 @@ fun LoginOrSignUpButtonScreen(navController: NavController,eutiViewModel: EutiVi
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun SignInWithGoogleButton(eutiViewModel: EutiViewModel,isLoading:Boolean = false) {
+fun SignInWithGoogleButton(eutiViewModel: EutiViewModel,isLoading:Boolean = false,setShowLoading:(Boolean) -> Unit) {
     val context = LocalContext.current
     val oneTapClient =  Identity.getSignInClient(context)
     val REQ_ONE_TAP = 2  // Can be any integer unique to the Activity
@@ -280,6 +302,7 @@ fun SignInWithGoogleButton(eutiViewModel: EutiViewModel,isLoading:Boolean = fals
             .padding(horizontal = smallPadding, vertical = mediumPadding),
         backgroundColor = MaterialTheme.colors.background,
         onClick = {
+            setShowLoading(true)
             oneTapClient.beginSignIn(signInWithGoogle())
                 .addOnSuccessListener((context as Activity)
                 ) { result ->
@@ -295,12 +318,13 @@ fun SignInWithGoogleButton(eutiViewModel: EutiViewModel,isLoading:Boolean = fals
                     context,
                     OnFailureListener { e -> // No saved credentials found. Launch the One Tap sign-up flow, or
                         // do nothing and continue presenting the signed-out UI.
+                        setShowLoading(false)
                         e.printStackTrace()
                         e.message?.let { Log.e("TAG", it) }
                     })
         }
     ) {
-        if (!isLoading){
+        if (true){
             Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(smallPadding)) {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(largePadding),
@@ -319,7 +343,7 @@ fun SignInWithGoogleButton(eutiViewModel: EutiViewModel,isLoading:Boolean = fals
         }else{
             Box(modifier = Modifier
                 .padding(smallPadding)
-                .fillMaxWidth()) {
+                .fillMaxWidth(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
         }

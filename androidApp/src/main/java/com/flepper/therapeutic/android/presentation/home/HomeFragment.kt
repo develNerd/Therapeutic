@@ -51,13 +51,22 @@ import com.flepper.therapeutic.android.presentation.widgets.MediumTextBold
 import com.flepper.therapeutic.android.presentation.widgets.RegularText
 import kotlinx.coroutines.launch
 
+
+
 enum class MainHomeDestinations(val destName:String){
     VideoDetailScreen("video_detailed_screen"),
     HomeScreen("home_screen"),
     EutiScreen("euti_screen")
 }
 
+
+enum class BottomSheetContentType{
+    EVENT,
+    APPOINTMENT
+}
+
 class HomeFragment : BaseFragment<FragmentHomeBinding>() {
+
 
 
     private val mainActivityViewModel: MainActivityViewModel by activityViewModels()
@@ -77,7 +86,9 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
         val mainAppNavController = findNavController()
         homeViewModel.getFeaturedContent()
         homeViewModel.getEvents()
+        homeViewModel.getSessionLocal()
         homeViewModel.appPreferences.isBeenToDashboard = true
+        mainActivityViewModel.getTeamMembers()
         binding.composeView.apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
@@ -96,20 +107,48 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
                             mutableStateOf(false)
                         }
 
+
+
                         ModalBottomSheetLayout(
                             sheetState = state,
                             sheetContent = {
                                 val selectedEvent by homeViewModel.selectedEvent.collectAsState()
                                 val changeMade by homeViewModel.changeMade.collectAsState()
+                                val sessionChangeMade by homeViewModel.sessionChangeMade.collectAsState()
+                                val session by homeViewModel.localSession.collectAsState()
+                                val currentBottomSheetContentType by homeViewModel.currentBottomSheetContentType.collectAsState()
+                                val collapseBottomSheet by homeViewModel.collapseBottomSheet.collectAsState()
 
-                                if (selectedEvent.isNotEmpty()){
-                                    DetailedEventBottomSheet(worldWideEvent = selectedEvent.first(),homeViewModel,state)
+                                if (collapseBottomSheet){
                                     LaunchedEffect(key1 =  changeMade, block = {
-                                        scope.launch { state.show() }
+                                        state.hide()
                                     })
+                                }
 
+                                if (currentBottomSheetContentType == BottomSheetContentType.EVENT){
+                                    if (selectedEvent.isNotEmpty()){
+                                        DetailedEventBottomSheet(worldWideEvent = selectedEvent.first(),homeViewModel,state)
+                                        LaunchedEffect(key1 =  changeMade, block = {
+                                            state.show()
+                                        })
+
+
+                                    }else{
+                                        Spacer(modifier = Modifier.size(size56dp))
+
+                                    }
                                 }else{
-                                    Spacer(modifier = Modifier.size(size56dp))
+                                    if (session.isNotEmpty()){
+                                        DetailedSessionBottomSheet(session.first(),homeViewModel,state)
+                                        LaunchedEffect(key1 =  sessionChangeMade, block = {
+                                            state.show()
+                                        })
+                                        //homeViewModel.getTeamembersLocal(session.first().appointmentSegments?.first()?.teamMemberId ?: "")
+
+                                    }else if (session.isEmpty()){
+
+                                        Spacer(modifier = Modifier.size(size56dp))
+                                    }
                                 }
                                 val coroutinesScope = rememberCoroutineScope()
 

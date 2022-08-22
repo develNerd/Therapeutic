@@ -51,6 +51,21 @@
     <string name="to_schedule_req_sign_up">Or Sign up if you do not have an account with us</string>
     <string name="email">Email</string>
     <string name="something_went_wrong">Something went wrong please try again</string>
-    <string name="ok">Okay</string>
+    <string name="select_appointment_time">Please select appointment time for %1$s</string>
+    <string name="select_date">Select Date</string>
+    <string name="checking_for_time_availabity">Checking for time availability</string>
+    <string name="booking_appointment_please_wait">Please wait while I book your appointment</string>
+    <string name="euti_sorry_something_went_wrong">Sorry something went wrong. Please try again</string>
+    <string name="ok">OK</string>
+    <string name="upcoming">Upcoming Session</string>
+    <string name="therapy">Therapy Session</string>
+    <string name="therapeutic_h1">Therapeutic HQ</string>
+    <string name="therapy_session_with_therapeutic">Therapy session with therapeutic</string>
+    <string name="cancel_appointment">Cancel Appointment</string>
+    <string name="one_schdule">You have one upcoming appointment</string>
+    <string name="yay_booked">Yay !, your appointment was booked successfully</string>
+
+    <string name="join">Join</string>
+    <string name="live_on_twitter">Live On Twitter</string>
 
 </resources>

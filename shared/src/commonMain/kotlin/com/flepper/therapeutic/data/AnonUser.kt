@@ -3,10 +3,10 @@ package com.flepper.therapeutic.data
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class User(val userName:String)
+data class AnonUser(val userName:String)
 
 @Serializable
-data class SignInUser(var id:String,val userName:String,val email:String)
+data class CurrentUser(var id:String, val userName:String, val email:String, var squareCustomerID:String = "")
 
 
 @Serializable

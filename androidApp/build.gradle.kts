@@ -8,6 +8,12 @@ plugins {
 }
 
 val key: String = gradleLocalProperties(rootDir).getProperty("WEB_CLIENT_API_KEY")
+// TODO(Store Access Token on Web server and create a function to refresh and share with client)
+// TODO(To prevent token from being revoked referesh on server every week)
+val squareDefAccessToken: String = gradleLocalProperties(rootDir).getProperty("SQUARE_ACCESS_TOKEN")
+val squareDefRefreshToken: String = gradleLocalProperties(rootDir).getProperty("SQUARE_REFRESH_TOKEN")
+val therapy_session_id:String = gradleLocalProperties(rootDir).getProperty("THERAPY_SESSION_CATALOG_ITEM_ID")
+val defaultTestLocationId:String = gradleLocalProperties(rootDir).getProperty("DEFAULT_TEST_LOCATION_ID")
 
 
 android {
@@ -48,6 +54,17 @@ android {
         }
         getByName("debug") {
             buildConfigField("String", "WEB_CLIENT_API_KEY", key)
+            buildConfigField("String", "SQUARE_ACCESS_TOKEN", squareDefAccessToken)
+            buildConfigField("String", "SQUARE_REFRESH_TOKEN", squareDefRefreshToken)
+            buildConfigField("String", "THERAPY_SESSION_CATALOG_ITEM_ID", therapy_session_id)
+            buildConfigField("String", "DEFAULT_TEST_LOCATION_ID", defaultTestLocationId)
+        }
+        getByName("release") {
+            buildConfigField("String", "WEB_CLIENT_API_KEY", key)
+            buildConfigField("String", "SQUARE_ACCESS_TOKEN", squareDefAccessToken)
+            buildConfigField("String", "SQUARE_REFRESH_TOKEN", squareDefRefreshToken)
+            buildConfigField("String", "THERAPY_SESSION_CATALOG_ITEM_ID", therapy_session_id)
+            buildConfigField("String", "DEFAULT_TEST_LOCATION_ID", defaultTestLocationId)
         }
     }
 
@@ -153,6 +170,14 @@ dependencies {
     // Also declare the dependency for the Google Play services library and specify its version
     implementation("com.google.android.gms:play-services-auth:20.2.0")
 
+    //
+    implementation("com.google.android.material:material:1.6.1")
+
+    //
+    implementation("com.github.prolificinteractive:material-calendarview:2.0.1")
+
+    implementation("com.google.maps.android:maps-compose:2.5.3")
+    implementation("com.google.android.gms:play-services-maps:18.1.0")
 
 }
 

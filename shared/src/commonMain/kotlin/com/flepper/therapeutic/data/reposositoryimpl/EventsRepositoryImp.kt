@@ -17,7 +17,7 @@ import io.realm.kotlin.ext.query
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-class EventsRepositoryImp(private val fireStore: FirebaseFirestore,private val therapeuticDb: TherapeuticDb):EventsRepository {
+class EventsRepositoryImp(private val fireStore: FirebaseFirestore, therapeuticDb: TherapeuticDb):EventsRepository {
 
     private val db = therapeuticDb.invoke()
 
@@ -28,7 +28,9 @@ class EventsRepositoryImp(private val fireStore: FirebaseFirestore,private val t
     override suspend fun saveWorldWideEvent(worldWideEvent: WorldWideEvent) {
         Logger.e("Dao" + worldWideEvent.toString())
         db.write {
-            copyToRealm(worldWideEvent.getDAO(),UpdatePolicy.ALL)
+            copyToRealm(worldWideEvent.getDAO().apply {
+                   hosts = worldWideEvent.getDAO().hosts
+            },UpdatePolicy.ALL)
         }
     }
 

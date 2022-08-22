@@ -24,6 +24,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.*
 import com.flepper.therapeutic.android.R
 import com.flepper.therapeutic.android.presentation.home.BottomSheetGestureView
+import com.flepper.therapeutic.android.presentation.home.EventChipItem
 import com.flepper.therapeutic.android.presentation.home.HomeViewModel
 import com.flepper.therapeutic.android.presentation.theme.*
 import com.flepper.therapeutic.android.presentation.widgets.MediumTextBold
@@ -37,11 +38,12 @@ fun EutiHome(homeNavController:NavController,eutiViewModel: EutiViewModel,homeVi
 
 
     val navController = rememberNavController()
+    val mainSheetItems by homeViewModel.mainSheetItems.collectAsState()
     val bottomSheetScaffoldState = rememberBottomSheetScaffoldState()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
 
     val mainScreen = EutiScreens.MainBottomContent(
-        items = eutiViewModel.mainSheetItems,
+        items = mainSheetItems,
         eutiViewModel = eutiViewModel,
         homeViewModel
     ) {
@@ -61,12 +63,18 @@ fun EutiHome(homeNavController:NavController,eutiViewModel: EutiViewModel,homeVi
 
     val toSignInOrSignUp= EutiScreens.ToSignUpOrSignInScreen(eutiViewModel)
 
-    /** @LOLYouCanMakeThisDynamic -> Populate as needed*/
+    val selectDateScreen = EutiScreens.ScheduleSessionDateScreen(eutiViewModel)
+
+    val selectTimeScreen = EutiScreens.ScheduleSessionTimeScreen(eutiViewModel)
+
+    /** @LOLYouCanMakeThisDynamic -> Populate as needed - Not Scalable as at now*/
     val bottomDestinations = listOf(
         mainScreen,
         genericView,
         signInScreen,
-        toSignInOrSignUp
+        toSignInOrSignUp,
+        selectDateScreen,
+        selectTimeScreen
     )
 
 
@@ -121,9 +129,7 @@ fun EutiHome(homeNavController:NavController,eutiViewModel: EutiViewModel,homeVi
                     .background(color = transGray)
                     .height(1.dp)
             )
-            Column(modifier = Modifier.fillMaxWidth().padding(vertical = spacing3dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                MediumTextBold(text = stringResource(id = R.string.schedules), color = MaterialTheme.colors.primaryVariant)
-            }
+
             Spacer(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -153,7 +159,9 @@ fun EutiHome(homeNavController:NavController,eutiViewModel: EutiViewModel,homeVi
 
 @Composable
 fun EutToolbar(smallTitle: String = "", @DrawableRes icon: Int, onBackClicked: () -> Unit) {
-    Box(modifier = Modifier.fillMaxWidth().padding(vertical = spacing3dp)) {
+    Box(modifier = Modifier
+        .fillMaxWidth()
+        .padding(vertical = spacing3dp)) {
         IconButton(
             onClick = onBackClicked, modifier = Modifier
                 .padding(start = spacing3dp)
