@@ -7,6 +7,7 @@ import com.flepper.therapeutic.data.models.appointments.availabletimeresponse.Av
 import com.flepper.therapeutic.data.models.appointments.booking.BookAppointmentResponse
 import com.flepper.therapeutic.data.models.appointments.booking.BookingRequest
 import com.flepper.therapeutic.data.repositories.AppointmentsRepository
+import com.flepper.therapeutic.data.reposositoryimpl.FlowList
 import kotlinx.coroutines.CoroutineScope
 
 class BookAppointmentUseCase(coroutineScope: CoroutineScope, private val appointmentsRepository: AppointmentsRepository) :
@@ -25,3 +26,29 @@ class SaveBookingLocalUseCase(coroutineScope: CoroutineScope,private val appoint
     ) = appointmentsRepository.saveBookingLocal(request)
 
 }
+
+class GetBookingLocalUseCase(coroutineScope: CoroutineScope,private val appointmentsRepository: AppointmentsRepository) :
+    BaseUseCaseDispatcher<Unit, FlowList<BookAppointmentResponse>>(coroutineScope) {
+    override suspend fun dispatchInBackground(
+        request: Unit,
+        coroutineScope: CoroutineScope
+    ) = appointmentsRepository.getAppointmentsLocal()
+
+}
+
+class CancelBookingUseCase(coroutineScope: CoroutineScope, private val appointmentsRepository: AppointmentsRepository) :
+    BaseUseCaseDispatcher<String, FlowResult<BookAppointmentResponse>>(coroutineScope) {
+    override suspend fun dispatchInBackground(
+        request: String,
+        coroutineScope: CoroutineScope
+    ) = appointmentsRepository.cancelBooking(request)
+}
+
+class CancelBookingLocalUseCase(coroutineScope: CoroutineScope, private val appointmentsRepository: AppointmentsRepository) :
+    BaseUseCaseDispatcher<Unit, Unit>(coroutineScope) {
+    override suspend fun dispatchInBackground(
+        request: Unit,
+        coroutineScope: CoroutineScope
+    ) = appointmentsRepository.deleteBookingLocal()
+}
+

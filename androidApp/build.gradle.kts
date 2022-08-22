@@ -169,7 +169,8 @@ dependencies {
     //
     implementation("com.github.prolificinteractive:material-calendarview:2.0.1")
 
-
+    implementation("com.google.maps.android:maps-compose:2.5.3")
+    implementation("com.google.android.gms:play-services-maps:18.1.0")
 
 }
 

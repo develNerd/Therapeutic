@@ -6,6 +6,9 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
+data class TeamMemberData(@SerialName("team_members") val teamMembers:List<TeamMembersItem>)
+
+@Serializable
 data class TeamMembersItem(
     @SerialName("email_address") val emailAddress: String = "",
     @SerialName("reference_id") val referenceId: String = "",

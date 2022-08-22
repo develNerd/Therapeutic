@@ -13,4 +13,8 @@ class AppointmentsUseCaseFactory(coroutineScope: CoroutineScope,appointmentsRepo
     val getAvailableTimeUseCase = GetAvailableTimeUseCase(coroutineScope, appointmentsRepository)
     val bookAppointmentUseCase = BookAppointmentUseCase(coroutineScope, appointmentsRepository)
     val saveBookingLocal = SaveBookingLocalUseCase(coroutineScope, appointmentsRepository)
+    val getBookingLocalUseCase = GetBookingLocalUseCase(coroutineScope, appointmentsRepository)
+    val cancelBookingUseCase = CancelBookingUseCase(coroutineScope, appointmentsRepository)
+    val cancelBookingLocalUseCase = CancelBookingLocalUseCase(coroutineScope, appointmentsRepository)
+
 }

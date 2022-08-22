@@ -45,27 +45,6 @@ class EutiViewModel : BaseViewModel() {
 
     /** @MainBottomSheetItems*/
 
-    val mainSheetItems = listOf(
-        EutiMainSheetItem(
-            "Show ongoing Events", R.drawable.ic_equaliser,
-            SheetContentType.ONGOING_EVENTS
-        ),
-        EutiMainSheetItem(
-            "Show Upcoming Events",
-            R.drawable.ic_ongoing_events,
-            SheetContentType.UPCOMING_EVENTS
-        ),
-        EutiMainSheetItem(
-            "Book a session with Therapeutic",
-            R.drawable.ic_schedule_session,
-            SheetContentType.SCHEDULE_SESSION
-        ),
-        EutiMainSheetItem(
-            "Watch featured meditation videos",
-            R.drawable.ic_watch_featured,
-            SheetContentType.WATCH_FEATURED_VIDEOS
-        )
-    )
 
     /** Euti Replies*/
     private val _eutiReplies = MutableStateFlow(
@@ -98,9 +77,8 @@ class EutiViewModel : BaseViewModel() {
         replies = eutiReplies.value.toMutableList()
         replies.add(chatType)
         _eutiReplies.value = replies.toList()
-        if (!_isChatAdded.value) {
-            setIsChatAdded(true)
-        }
+        setIsChatAdded(true)
+
     }
 
     /** @LogicTODetermineHead */
@@ -180,6 +158,7 @@ class EutiViewModel : BaseViewModel() {
                     EutiChatType.Content(
                         _currentEutiType.value.id,
                         eventResult.filter { if (isOngoing) it.isOngoing else !it.isOngoing },
+                        listOf(),
                         _currentEutiType.value.sheetContentType
                     )
                 )
@@ -202,7 +181,7 @@ class EutiViewModel : BaseViewModel() {
 
     private val _currentEutiType = MutableStateFlow(
         EutiChatType.Content(
-            "",
+            "", listOf(),
             emptyList(), SheetContentType.DEFAULT
         )
     )
@@ -308,17 +287,18 @@ class EutiViewModel : BaseViewModel() {
             viewModelScope = viewModelScope,
             useCase = appointmentsUseCaseFactory.getCustomerUseCase,
             inputValue = request,
-            callback = { result ->
-                Log.e("Result", result.toString())
+            callback = { resultList ->
+                val result = resultList.first()
+                Log.e("Result-Cust", result.toString())
                 if (signInMethod == SignInMethod.SIGN_IN) {
                     _signInResponse.value = OnResultObtained(
                         signInResult.apply { squareCustomerID = result.customer_id },
                         true
                     )
-                    appPreferences.signInUser = signInResult
+                    appPreferences.signInUser = signInResult.apply { squareCustomerID = result.customer_id }
                 } else {
                     _signUpResponse.value = OnResultObtained(signInResult, true)
-                    appPreferences.signInUser = signInResult
+                    appPreferences.signInUser = signInResult.apply { squareCustomerID = result.customer_id }
                 }
 
             },
@@ -468,6 +448,13 @@ class EutiViewModel : BaseViewModel() {
                     }
                 }
                 _appointmentTimes.value = availableTimePair
+                selectedAppointmentDate.value.apply {
+                    val eutiChat = EutiChatType.Euti(applicationContext().getString(R.string.select_appointment_time,"$year-$month-$day"), false).apply {
+                        this.isHead = checkHead(this)
+                    }
+                    addToReplies(eutiChat)
+                }
+                setIsChatLoading(false)
             },
             onError = {
                 _eutiGenericError.value =
@@ -511,6 +498,7 @@ class EutiViewModel : BaseViewModel() {
 
     private var selectedTeamberId = ""
 
+
     private val _selectedAppointmentTime = MutableStateFlow("")
     val selectedAppointmentTime: MutableStateFlow<String>
         get() = _selectedAppointmentTime
@@ -526,19 +514,19 @@ class EutiViewModel : BaseViewModel() {
         /** timekey is expected to be 8:00 am*/
         val startAt = toSquareApiStartAt(_selectedAppointmentDate.value, timeKey)
 
+        Log.e("StartAt",startAt)
+
         val teamMemberId = teamMemberTimeAndIdPair[timeKey]
         val appointmentSegment = AppointmentSegmentsItem(
             DEFAULT_SESSION_DURATION,
             teamMemberId ?: "",
-            false,
-            0,
             DEFAULT_SERVICE_VERSION,
             BuildConfig.THERAPY_SESSION_CATALOG_ITEM_ID
         )
         val booking = Booking(
             listOf(appointmentSegment),
             DEFAULT_CUSTOMER_NOTE,
-            appPreferences.signInUser?.id ?: "",
+            appPreferences.signInUser?.squareCustomerID ?: "",
             startAt,
             DEFAULT_LOCATION_TYPE,
             BuildConfig.DEFAULT_TEST_LOCATION_ID
@@ -549,11 +537,19 @@ class EutiViewModel : BaseViewModel() {
             useCase = appointmentsUseCaseFactory.bookAppointmentUseCase,
             inputValue = request,
             callback = { result ->
+                setIsChatLoading(false)
                 saveBookingLocal(result)
+                addToReplies(EutiChatType.Euti(applicationContext().getString(R.string.yay_booked),false).apply {
+                    isHead = checkHead(this)
+                })
             },
             onError = {
+                setIsChatLoading(false)
                 _eutiGenericError.value =
                     applicationContext().getString(R.string.something_went_wrong)
+                addToReplies(EutiChatType.Euti(applicationContext().getString(R.string.euti_sorry_something_went_wrong),false).apply {
+                    isHead = checkHead(this)
+                })
             })
     }
 
@@ -576,7 +572,8 @@ class EutiViewModel : BaseViewModel() {
             callback = { result ->
                 Log.e("Result-Success", "Yay")
                 _bookingSuccess.value = true
-
+                addToReplies(EutiChatType.Content(UUID.randomUUID().toString(),
+                    listOf(), listOf(request),SheetContentType.SCHEDULE_SESSION))
             }, onError = {
                 //assign to error variable
                 setBookingFailed()
@@ -588,16 +585,22 @@ class EutiViewModel : BaseViewModel() {
     private fun toSquareApiStartAt(calendarDay: CalendarDay, startTime: String): String {
         val startAtCal = Calendar.getInstance()
         startAtCal.set(Calendar.YEAR, calendarDay.year)
-        startAtCal.set(Calendar.MONTH, calendarDay.month)
+        startAtCal.set(Calendar.MONTH, calendarDay.month - 1)
         startAtCal.set(Calendar.DATE, calendarDay.day)
-        startAtCal.set(Calendar.HOUR_OF_DAY, startTime.split(":").first().trim().toInt())
+        val pm = startTime.split(" ")[1].trim().lowercase()
+        startAtCal.set(Calendar.AM_PM,if (pm.contains(pm)) Calendar.PM else Calendar.AM)
+        startAtCal.set(Calendar.HOUR, startTime.split(":").first().trim().toInt())
+        //
         startAtCal.set(Calendar.MINUTE, 0)
         startAtCal.set(Calendar.SECOND, 0)
         startAtCal.set(Calendar.MILLISECOND, 0)
 
         val sourceFormat = SimpleDateFormat(SQUARE_API_DATE_FORMAT, Locale.getDefault())
-        sourceFormat.timeZone = TimeZone.getTimeZone("UTC")
         return sourceFormat.format(startAtCal.time) // => Date is in UTC now, which is default business time
     }
+
+
+
+
 
 }

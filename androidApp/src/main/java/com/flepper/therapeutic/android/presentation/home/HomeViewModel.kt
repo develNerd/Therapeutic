@@ -3,11 +3,21 @@ package com.flepper.therapeutic.android.presentation.home
 import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewModelScope
+import com.flepper.therapeutic.android.R
 import com.flepper.therapeutic.android.presentation.core.BaseViewModel
+import com.flepper.therapeutic.android.presentation.home.euti.EutiMainSheetItem
+import com.flepper.therapeutic.android.presentation.home.euti.SheetContentType
 import com.flepper.therapeutic.android.presentation.theme.eventColors
+import com.flepper.therapeutic.android.util.asSquareApiDateString
+import com.flepper.therapeutic.android.util.toAppointmentEndCalendar
+import com.flepper.therapeutic.android.util.toAppointmentStartCalendar
 import com.flepper.therapeutic.data.apppreference.AppPreference
 import com.flepper.therapeutic.data.models.FeaturedContent
+import com.flepper.therapeutic.data.models.TeamMembersItem
 import com.flepper.therapeutic.data.models.WorldWideEvent
+import com.flepper.therapeutic.data.models.appointments.StartAtRange
+import com.flepper.therapeutic.data.models.appointments.booking.BookAppointmentResponse
+import com.flepper.therapeutic.data.usecasefactories.AppointmentsUseCaseFactory
 import com.flepper.therapeutic.data.usecasefactories.HomeUseCaseFactory
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,8 +27,24 @@ class HomeViewModel : BaseViewModel() {
 
     val appPreferences: AppPreference by inject()
 
-    private val homeUseCaseFactory: HomeUseCaseFactory by inject()
+    private val _currentBottomSheetContentType = MutableStateFlow(BottomSheetContentType.EVENT)
+    val currentBottomSheetContentType: StateFlow<BottomSheetContentType>
+        get() = _currentBottomSheetContentType
 
+    fun setCurrentBottomSheetType(value: BottomSheetContentType){
+        _currentBottomSheetContentType.value = value
+    }
+
+    private val _collapseBottomSheet = MutableStateFlow(false)
+    val collapseBottomSheet: StateFlow<Boolean>
+        get() = _collapseBottomSheet
+
+    fun setCollapse(value: Boolean){
+        _collapseBottomSheet.value = value
+    }
+
+    private val homeUseCaseFactory: HomeUseCaseFactory by inject()
+    private val appointmentUseCaseFactory:AppointmentsUseCaseFactory by inject()
 
     private val _currentFeaturedContent = MutableStateFlow(emptyList<FeaturedContent>())
     val currentFeaturedContent: StateFlow<List<FeaturedContent>>
@@ -44,11 +70,19 @@ class HomeViewModel : BaseViewModel() {
 
 
     private val _changeMade = MutableStateFlow(false)
-    val changeMade: MutableStateFlow<Boolean>
+    val changeMade: StateFlow<Boolean>
         get() = _changeMade
+
+    private val _sessionChangeMade = MutableStateFlow(false)
+    val sessionChangeMade: StateFlow<Boolean>
+        get() = _sessionChangeMade
 
     fun refreshEventSelection(){
         _changeMade.value = !_changeMade.value
+    }
+
+    fun refreshSessionSelection(){
+        _sessionChangeMade.value = !_sessionChangeMade.value
     }
 
     fun setSelectedEvent(event: WorldWideEvent?){
@@ -136,4 +170,129 @@ class HomeViewModel : BaseViewModel() {
                 //assign to error variable
             })
     }
+
+    /** @GetCurrentScheduledSession if available*/
+
+    private val _localSession = MutableStateFlow(emptyList<BookAppointmentResponse>())
+    val localSession: MutableStateFlow<List<BookAppointmentResponse>>
+        get() = _localSession
+
+
+
+    fun getSessionLocal(){
+        executeLocalFlowUseCase(
+            viewModelScope = viewModelScope,
+            useCase = appointmentUseCaseFactory.getBookingLocalUseCase,
+            inputValue = Unit,
+            callback = { result ->
+                _localSession.value = result
+                if (result.isNotEmpty()){
+                    val current = _mainSheetItems.value.toMutableList()
+                    _mainSheetItems.value = current.apply {
+                        removeAt(2)
+                        add(2, EutiMainSheetItem(
+                            "View scheduled Appointment",
+                            R.drawable.ic_schedule_session,
+                            SheetContentType.SCHEDULE_SESSION
+                        ))
+                    }
+                }
+                Log.e("Result-Success", result.toString())
+            }, onError = {
+                //assign to error variable
+                Log.e("Error", it.toString())
+            })
+    }
+    /** @MainSheetItems*/
+
+    private val _mainSheetItems = MutableStateFlow(
+        listOf(
+        EutiMainSheetItem(
+            "Show ongoing Events", R.drawable.ic_equaliser,
+            SheetContentType.ONGOING_EVENTS
+        ),
+        EutiMainSheetItem(
+            "Show Upcoming Events",
+            R.drawable.ic_ongoing_events,
+            SheetContentType.UPCOMING_EVENTS
+        ),
+        EutiMainSheetItem(
+            "Book a session with Therapeutic",
+            R.drawable.ic_schedule_session,
+            SheetContentType.SCHEDULE_SESSION
+        ),
+        EutiMainSheetItem(
+            "Listen to Podcasts",
+            R.drawable.ic_watch_featured,
+            SheetContentType.LISTEN_TO_PODCASTS
+        )
+    )
+    )
+
+    val mainSheetItems: StateFlow<List<EutiMainSheetItem>>
+        get() = _mainSheetItems
+
+
+    /** Cancel booking */
+    private val _cancelBooking = MutableStateFlow(OnResultObtained<BookAppointmentResponse>(null, false))
+    val cancelBooking: StateFlow<OnResultObtained<BookAppointmentResponse>>
+        get() = _cancelBooking
+
+    fun cancelBooking(bookingId:String){
+        executeApiCallUseCase(
+            viewModelScope = viewModelScope,
+            useCase = appointmentUseCaseFactory.cancelBookingUseCase,
+            inputValue = bookingId,
+            callback = { result ->
+                cancelBookingLocal(result)
+
+            },
+            onError = {
+
+            })
+    }
+
+    private fun cancelBookingLocal(booking:BookAppointmentResponse){
+        executeLocalUseCase(
+            viewModelScope = viewModelScope,
+            useCase = appointmentUseCaseFactory.cancelBookingLocalUseCase,
+            inputValue = Unit,
+            callback = { result ->
+                val current = _mainSheetItems.value.toMutableList()
+                _mainSheetItems.value = current.apply {
+                    removeAt(2)
+                    add(2, EutiMainSheetItem(
+                        "Book a session with Therapeutic",
+                        R.drawable.ic_schedule_session,
+                        SheetContentType.SCHEDULE_SESSION
+                    ))
+                }
+                _cancelBooking.value = OnResultObtained(booking,true)
+                setCurrentBottomSheetType(BottomSheetContentType.EVENT)
+                _collapseBottomSheet.value = true
+            },
+            onError = {
+            })
+    }
+
+    private val _sessionTherapist = MutableStateFlow(emptyList<TeamMembersItem>())
+    val sessionTherapist: StateFlow<List<TeamMembersItem>>
+        get() = _sessionTherapist
+
+    fun getTeamembersLocal(id:String) {
+        executeLocalFlowUseCase(
+            viewModelScope = viewModelScope,
+            useCase = appointmentUseCaseFactory.getTeamMembersLocalUseCase,
+            inputValue = Unit,
+            callback = { result ->
+                Log.e("ResultTeam $id",result.toString())
+                _sessionTherapist.value = result.filter { tm -> tm.id == id }
+            }, onError = {
+                //assign to error variable
+                it.printStackTrace()
+                Log.e("Error", it.toString())
+            })
+    }
+
+
 }

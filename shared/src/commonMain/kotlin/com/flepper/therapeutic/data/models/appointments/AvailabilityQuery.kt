@@ -1,3 +1,7 @@
 package com.flepper.therapeutic.data.models.appointments
 
-data class AvailabilityQuery(val filter: AppointmentsFilter)
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class AvailabilityQuery(@SerialName("filter") val filter: AppointmentsFilter)

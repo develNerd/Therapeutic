@@ -4,12 +4,16 @@ import io.realm.kotlin.types.RealmObject
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+
+@Serializable
+data class Data(@SerialName("booking") val booking: BookAppointmentResponse,@SerialName("errors") val errors:List<String>? = null)
+
 @Serializable
 data class BookAppointmentResponse(
     @SerialName("created_at") val createdAt: String = "",
     @SerialName("customer_note") val customerNote: String = "",
     @SerialName("source") val source: String = "",
-    @SerialName("start_at") val startAt: String = "",
+    @SerialName("start_at") var startAt: String = "",
     @SerialName("transition_time_minutes") val transitionTimeMinutes: Int = 0,
     @SerialName("version") val version: Int = 0,
     @SerialName("location_id") val locationId: String = "",
@@ -22,7 +26,7 @@ data class BookAppointmentResponse(
     @SerialName("status") val status: String = ""
 ) {
     fun toBookAppointmentResponseDao() = BookAppointmentResponseDao().also { dao ->
-        dao.createdAt =createdAt
+        dao.createdAt = createdAt
         dao.customerNote = customerNote
         dao.source = source
         dao.startAt = startAt
@@ -54,4 +58,21 @@ class BookAppointmentResponseDao : RealmObject {
     var id: String = ""
     var customerId: String = ""
     var status: String = ""
+
+    fun toBookingResponse() = BookAppointmentResponse(
+        createdAt,
+        customerNote,
+        source,
+        startAt,
+        transitionTimeMinutes,
+        version,
+        locationId,
+        locationType,
+        listOf(appointmentSegment?.toAppointmentSegment()!!),
+        updatedAt,
+        allDay,
+        id,
+        customerId,
+        status
+    )
 }

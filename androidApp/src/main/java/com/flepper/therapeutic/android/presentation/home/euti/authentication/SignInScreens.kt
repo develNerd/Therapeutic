@@ -318,12 +318,13 @@ fun SignInWithGoogleButton(eutiViewModel: EutiViewModel,isLoading:Boolean = fals
                     context,
                     OnFailureListener { e -> // No saved credentials found. Launch the One Tap sign-up flow, or
                         // do nothing and continue presenting the signed-out UI.
+                        setShowLoading(false)
                         e.printStackTrace()
                         e.message?.let { Log.e("TAG", it) }
                     })
         }
     ) {
-        if (!isLoading){
+        if (true){
             Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(smallPadding)) {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(largePadding),
@@ -342,7 +343,7 @@ fun SignInWithGoogleButton(eutiViewModel: EutiViewModel,isLoading:Boolean = fals
         }else{
             Box(modifier = Modifier
                 .padding(smallPadding)
-                .fillMaxWidth()) {
+                .fillMaxWidth(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
         }

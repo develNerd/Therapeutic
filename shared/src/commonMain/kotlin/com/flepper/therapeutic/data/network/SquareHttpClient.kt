@@ -49,7 +49,7 @@ class SquareHttpClient(appPreference: AppPreference) {
                 ignoreUnknownKeys = true
                 encodeDefaults = true
             })
-            acceptContentTypes = listOf(ContentType.Any)
+            acceptContentTypes = listOf(ContentType.Application.Json)
         }
 
         install(Logging) {

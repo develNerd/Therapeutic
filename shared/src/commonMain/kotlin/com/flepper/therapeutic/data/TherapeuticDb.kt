@@ -13,4 +13,5 @@ class TherapeuticDb {
     private val configuration =RealmConfiguration.Builder(schema = setOf(WorldWideEventDAO::class,HostDao::class,TeamMembersItemDao::class,BookAppointmentResponseDao::class,AppointmentSegmentItemDao::class)).schemaVersion(4).build()
 
     operator fun invoke() = Realm.open(configuration.apply { deleteRealmIfMigrationNeeded })
+
 }

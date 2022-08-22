@@ -8,7 +8,7 @@ import com.flepper.therapeutic.data.repositories.AppointmentsRepository
 import kotlinx.coroutines.CoroutineScope
 
 class GetCustomerUseCase(coroutineScope: CoroutineScope, private val appointmentsRepository: AppointmentsRepository) :
-    BaseUseCaseDispatcher<Filter, FlowResult<CustomerResponse>>(coroutineScope) {
+    BaseUseCaseDispatcher<Filter, FlowResult<List<CustomerResponse>>>(coroutineScope) {
     override suspend fun dispatchInBackground(
         request: Filter,
         coroutineScope: CoroutineScope

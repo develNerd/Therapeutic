@@ -2,6 +2,7 @@ package com.flepper.therapeutic.android.presentation.home
 
 import android.util.Log
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -22,18 +24,26 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidViewBinding
 import coil.compose.AsyncImage
+import com.bumptech.glide.Glide
 import com.flepper.therapeutic.android.R
+import com.flepper.therapeutic.android.databinding.BotTypingLayoutBinding
+import com.flepper.therapeutic.android.databinding.EqualiserLayoutBinding
+import com.flepper.therapeutic.android.databinding.EqualiserSmallLayoutBinding
 import com.flepper.therapeutic.android.presentation.theme.*
 import com.flepper.therapeutic.android.presentation.widgets.MediumTextBold
 import com.flepper.therapeutic.android.presentation.widgets.RegularText
 import com.flepper.therapeutic.android.util.*
 import com.flepper.therapeutic.data.models.FeaturedContent
 import com.flepper.therapeutic.data.models.WorldWideEvent
+import com.flepper.therapeutic.data.models.appointments.booking.BookAppointmentResponse
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 // TODO ("Restructure Compose Functions i.e Into Respective Classes")
 @Composable
-fun HomeScreen(homeViewModel: HomeViewModel,onFeaturedItemClicked:() -> Unit) {
+fun HomeScreen(homeViewModel: HomeViewModel, onFeaturedItemClicked: () -> Unit) {
     Column(modifier = Modifier.fillMaxSize()) {
         Column(
             Modifier
@@ -55,14 +65,44 @@ fun HomeScreen(homeViewModel: HomeViewModel,onFeaturedItemClicked:() -> Unit) {
             )
 
         }
-        FeaturedContentRow(homeViewModel = homeViewModel,onFeaturedItemClicked = onFeaturedItemClicked)
+        val localSessions by homeViewModel.localSession.collectAsState()
+
+        if (localSessions.isNotEmpty()) {
+            val localSession = localSessions.first()
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = spacing3dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(
+                    spacing5dp
+                )
+            ) {
+                ScheduleItemChip(
+                    text = stringResource(id = R.string.upcoming) + " • " + localSession.startAt.fromApiTime()
+                        .parseToMonthDayString() + " • " + localSession.startAt.fromApiTime()
+                        .parseToHourMinuteString(),
+                    baseColor = lightViolet,
+                    icon = R.drawable.ic_schedule_session,
+                    false,
+                ) {
+                    homeViewModel.setCurrentBottomSheetType(BottomSheetContentType.APPOINTMENT)
+                    homeViewModel.refreshSessionSelection()
+                }
+            }
+        }
+
+        FeaturedContentRow(
+            homeViewModel = homeViewModel,
+            onFeaturedItemClicked = onFeaturedItemClicked
+        )
         WorldWideEventsColumn(viewModel = homeViewModel)
     }
 }
 
 
 @Composable
-fun FeaturedContentRow(homeViewModel: HomeViewModel,onFeaturedItemClicked:() -> Unit) {
+fun FeaturedContentRow(homeViewModel: HomeViewModel, onFeaturedItemClicked: () -> Unit) {
 
     val featuredItems by homeViewModel.featuredContent.collectAsState()
 
@@ -85,11 +125,11 @@ fun FeaturedContentRow(homeViewModel: HomeViewModel,onFeaturedItemClicked:() -> 
                 loadComplete = featuredItems.isLoaded
             ) {
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(spacing12dp)) {
-                    itemsIndexed(featuredItems.result!!) { index,item: FeaturedContent ->
+                    itemsIndexed(featuredItems.result!!) { index, item: FeaturedContent ->
                         if (item == featuredItems.result!!.first()) {
                             Spacer(modifier = Modifier.size(mediumPadding))
                         }
-                        FeaturedContentItem(item = item,index){currentIndex ->
+                        FeaturedContentItem(item = item, index) { currentIndex ->
                             onFeaturedItemClicked()
                             homeViewModel.setCurrentFeaturedContent(featuredItems.result!![currentIndex])
                         }
@@ -113,7 +153,7 @@ fun FeaturedContentRow(homeViewModel: HomeViewModel,onFeaturedItemClicked:() -> 
 fun FeaturedContentColumn(homeViewModel: HomeViewModel) {
 
     val featuredItems by homeViewModel.featuredContent.collectAsState()
-    val currentItem by  homeViewModel.currentFeaturedContent.collectAsState()
+    val currentItem by homeViewModel.currentFeaturedContent.collectAsState()
 
     Column(
         modifier = Modifier
@@ -124,9 +164,16 @@ fun FeaturedContentColumn(homeViewModel: HomeViewModel) {
         )
     ) {
         /** @Column author and title*/
-        Column(verticalArrangement = Arrangement.spacedBy(spacing0dot5dp), modifier = Modifier.padding(horizontal = mediumPadding)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(
-                spacing4dp)) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(spacing0dot5dp),
+            modifier = Modifier.padding(horizontal = mediumPadding)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(
+                    spacing4dp
+                )
+            ) {
                 /** @Row Title */
                 Row(
                     modifier = Modifier
@@ -142,13 +189,13 @@ fun FeaturedContentColumn(homeViewModel: HomeViewModel) {
                             contentDescription = "",
                             modifier = Modifier.size(
                                 size20dp
-                            ), tint =  paleGreen
+                            ), tint = paleGreen
                         )
                     }
 
                     MediumTextBold(
                         text = currentItem.first().description,
-                        color = MaterialTheme.colors.onSurface ,
+                        color = MaterialTheme.colors.onSurface,
                         modifier = Modifier
                             .padding(start = mediumPadding, top = 1.5.dp),
                         textSize = headerTextSize
@@ -158,19 +205,31 @@ fun FeaturedContentColumn(homeViewModel: HomeViewModel) {
                 /** @Row Fav */
                 Row(horizontalArrangement = Arrangement.spacedBy(smallPadding)) {
                     IconToggleButton(checked = false, onCheckedChange = {}) {
-                        Icon(painter = painterResource(id = R.drawable.thumb_up), contentDescription = "", tint = MaterialTheme.colors.onBackground, modifier = Modifier.size(
-                            size24dp))
+                        Icon(
+                            painter = painterResource(id = R.drawable.thumb_up),
+                            contentDescription = "",
+                            tint = MaterialTheme.colors.onBackground,
+                            modifier = Modifier.size(
+                                size24dp
+                            )
+                        )
                     }
                     IconToggleButton(checked = false, onCheckedChange = {}) {
-                        Icon(painter = painterResource(id = R.drawable.thumb_down), contentDescription = "", tint = MaterialTheme.colors.onBackground, modifier = Modifier.size(
-                            size24dp))
+                        Icon(
+                            painter = painterResource(id = R.drawable.thumb_down),
+                            contentDescription = "",
+                            tint = MaterialTheme.colors.onBackground,
+                            modifier = Modifier.size(
+                                size24dp
+                            )
+                        )
                     }
                 }
 
             }
 
-            Row{
-                RegularText(text = stringResource(id = R.string.by_author,"Master Sri Arkashana"))
+            Row {
+                RegularText(text = stringResource(id = R.string.by_author, "Master Sri Arkashana"))
             }
         }
 
@@ -199,7 +258,7 @@ fun FeaturedContentColumn(homeViewModel: HomeViewModel) {
 }
 
 @Composable
-fun Line(){
+fun Line() {
     Spacer(
         modifier = Modifier
             .fillMaxWidth()
@@ -211,7 +270,7 @@ fun Line(){
 }
 
 @Composable
-fun FeaturedContentItem(item: FeaturedContent,index:Int,onFeaturedItemClicked:(Int) -> Unit) {
+fun FeaturedContentItem(item: FeaturedContent, index: Int, onFeaturedItemClicked: (Int) -> Unit) {
     Box(modifier = Modifier
         .size(width = width200dp, height = height100dp)
         .clickable {
@@ -265,15 +324,20 @@ fun FeaturedContentItem(item: FeaturedContent,index:Int,onFeaturedItemClicked:(I
 
 @Composable
 fun FeaturedContentColumnItem(item: FeaturedContent) {
-    Column(modifier = Modifier
-        .fillMaxWidth()
-        .wrapContentHeight(), verticalArrangement = Arrangement.spacedBy(
-        mediumPadding)) {
-        
-        Box(modifier = Modifier
+    Column(
+        modifier = Modifier
             .fillMaxWidth()
-            .height(height100dp)
-            .padding(horizontal = mediumPadding, vertical = smallPadding))
+            .wrapContentHeight(), verticalArrangement = Arrangement.spacedBy(
+            mediumPadding
+        )
+    ) {
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(height100dp)
+                .padding(horizontal = mediumPadding, vertical = smallPadding)
+        )
         {
 
 
@@ -294,10 +358,11 @@ fun FeaturedContentColumnItem(item: FeaturedContent) {
                     )
             )
 
-            
+
         }
         Column(
-            verticalArrangement = Arrangement.spacedBy(spacing2dp), modifier = Modifier.padding(horizontal = mediumPadding)
+            verticalArrangement = Arrangement.spacedBy(spacing2dp),
+            modifier = Modifier.padding(horizontal = mediumPadding)
         ) {
             Row(
                 modifier = Modifier, verticalAlignment = Alignment.CenterVertically
@@ -308,7 +373,7 @@ fun FeaturedContentColumnItem(item: FeaturedContent) {
                     contentDescription = "",
                     modifier = Modifier.size(
                         size15dp
-                    ), tint =  lightViolet
+                    ), tint = lightViolet
                 )
 
                 MediumTextBold(
@@ -375,9 +440,10 @@ fun WorldWideEventsColumn(viewModel: HomeViewModel) {
                         backGroundColor,
                         index,
                         isBackgroundThemed = backGroundColor == MaterialTheme.colors.background
-                    ){ currentEvent ->
+                    ) { currentEvent ->
                         viewModel.getEvent(currentEvent.id, worldWideEvent = currentEvent)
                         viewModel.refreshEventSelection()
+                        viewModel.setCurrentBottomSheetType(BottomSheetContentType.EVENT)
                     }
 
                     if (item == events.result!!.last()) {
@@ -398,9 +464,9 @@ var currentChipIndex = ChipIndex()
 fun WorldWideEventsItem(
     worldWideEvent: WorldWideEvent,
     backGroundColor: Color,
-    index:Int,
+    index: Int,
     isBackgroundThemed: Boolean = false,
-    onClicked:(WorldWideEvent) -> Unit
+    onClicked: (WorldWideEvent) -> Unit
 ) {
     Surface(
         shape = RoundedCornerShape(event_roundness),
@@ -445,6 +511,7 @@ fun WorldWideEventsItem(
                                 baseColor = backGroundColor,
                                 icon = icon,
                                 isBackgroundThemed,
+                                worldWideEvent.isOngoing
                             )
 
                         }
@@ -524,7 +591,11 @@ fun WorldWideEventsItem(
                 }
 
                 RegularText(
-                    text = stringResource(id = R.string.title_description, worldWideEvent.category,worldWideEvent.description),
+                    text = stringResource(
+                        id = R.string.title_description,
+                        worldWideEvent.category,
+                        worldWideEvent.description
+                    ),
                     color = if (isBackgroundThemed) MaterialTheme.colors.onSurface else systemGray,
                     modifier = Modifier
                         .padding(start = mediumPadding, top = 1.5.dp),
@@ -560,6 +631,131 @@ fun WorldWideEventsItem(
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun AppointmentItem(
+    appointment: BookAppointmentResponse,
+    backGroundColor: Color = lightViolet,
+    index: Int,
+    isBackgroundThemed: Boolean = false,
+    onClicked: (BookAppointmentResponse) -> Unit
+) {
+    Surface(
+        shape = RoundedCornerShape(event_roundness),
+        elevation = elevation16,
+        color = backGroundColor,
+        modifier = Modifier
+            .wrapContentHeight()
+            .padding(horizontal = eutiChatHorizontalSpacing), onClick = {
+            onClicked(appointment)
+        }
+    ) {
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(mediumPadding)
+        ) {
+            /** @Row Top Chips */
+
+            Row(
+                modifier = Modifier
+                    .wrapContentHeight()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(
+                    mediumPadding
+                )
+            ) {
+                Spacer(modifier = Modifier.padding(start = 1.0.dp))
+                val upComing = stringResource(id = R.string.upcoming)
+                val location = stringResource(id = R.string.therapeutic_h1)
+                appointment.apply {
+
+
+                    val eventChips = mapOf<String, Int>(
+                        startAt.fromApiTime()
+                            .parseToMonthDayString() to R.drawable.ic_calendar,
+                        startAt.fromApiTime()
+                            .parseToHourMinuteString() to R.drawable.ic_clock,
+                        location to R.drawable.ic_baseline_location_on_24
+                    )
+
+
+                    eventChips.forEach { (text, icon) ->
+                        if (text.isNotEmpty()) {
+
+                            EventChipItem(
+                                text = text,
+                                baseColor = backGroundColor,
+                                icon = icon,
+                                isBackgroundThemed,
+                            )
+
+                        }
+                    }
+                    Spacer(modifier = Modifier.size(smallPadding))
+                }
+
+            }
+
+
+            /** @Row Category */
+
+            Row(
+                modifier = Modifier
+                    .padding(horizontal = mediumPadding),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .padding(vertical = mediumPadding), contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_topic),
+                        contentDescription = "",
+                        modifier = Modifier.size(
+                            size20dp
+                        ), tint = if (isBackgroundThemed) lightRed else systemGray
+                    )
+                }
+
+                RegularText(
+                    text = stringResource(id = R.string.therapy),
+                    color = if (isBackgroundThemed) MaterialTheme.colors.onSurface else systemGray,
+                    modifier = Modifier
+                        .padding(start = mediumPadding, top = 1.5.dp),
+                    size = regular_bold_text_size
+                )
+            }
+
+            /** @Row HashTag */
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(if (isBackgroundThemed) transGray else transWhite)
+            ) {
+                MediumTextBold(
+                    text = stringResource(id = R.string.therapy_session_with_therapeutic),
+                    textSize = regular_bold_text_size,
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = smallPadding, vertical = mediumPadding),
+                    color = if (isBackgroundThemed) MaterialTheme.colors.onBackground else systemGray,
+                    fontWeight = FontWeight.Medium
+                )
+                Row(
+                    modifier = Modifier
+                        .weight(0.5f)
+                        .horizontalPadding(smallPadding)
+                ) {
+
+                }
+            }
+
+        }
+    }
+}
+
 fun Modifier.horizontalPadding(value: Dp): Modifier {
     return this.padding(horizontal = value)
 }
@@ -573,6 +769,7 @@ fun EventChipItem(
     baseColor: Color,
     @DrawableRes icon: Int,
     isBackgroundThemed: Boolean = false,
+    isOngoing: Boolean = false
 ) {
 
     val color = when (icon) {
@@ -588,6 +785,73 @@ fun EventChipItem(
                 border = BorderStroke(borderStroke1dot8dp, chipBaseColor),
                 shape = RoundedCornerShape(100)
             )
+    ) {
+        Box(
+            modifier = Modifier
+                .background(
+                    Color(
+                        chipBaseColor.red,
+                        chipBaseColor.green,
+                        chipBaseColor.blue,
+                        alpha = 0.2f
+                    ), RoundedCornerShape(100)
+                )
+                .padding(mediumPadding), contentAlignment = Alignment.Center
+        ) {
+            if (isOngoing && icon == EQUALISER_DRAWABLE_INT) {
+                AndroidViewBinding(EqualiserSmallLayoutBinding::inflate) {
+                    imageTyping.apply {
+                        Glide.with(context)
+                            .load(R.drawable.ic_event_ongoing)
+                            .into(this)
+                    }
+                }
+            } else {
+                Icon(
+                    painter = painterResource(id = icon),
+                    contentDescription = "",
+                    modifier = Modifier.size(
+                        size15dp
+                    ), tint = chipBaseColor
+                )
+
+            }
+
+        }
+
+        RegularText(
+            text = text,
+            color = chipBaseColor,
+            modifier = Modifier
+                .align(Alignment.CenterVertically)
+                .padding(horizontal = mediumPadding),
+            size = textSize11sp
+        )
+    }
+
+}
+
+@Composable
+fun ScheduleItemChip(
+    text: String,
+    baseColor: Color,
+    @DrawableRes icon: Int,
+    isBackgroundThemed: Boolean = false,
+    onClicked: () -> Unit
+) {
+
+    val color = MaterialTheme.colors.primaryVariant
+    val chipBaseColor = if (isBackgroundThemed) color else systemGray
+    Row(
+        modifier = Modifier
+            .padding(vertical = smallPadding)
+            .border(
+                border = BorderStroke(borderStroke1dot8dp, chipBaseColor),
+                shape = RoundedCornerShape(100)
+            )
+            .clickable {
+                onClicked()
+            }.clipToBounds()
     ) {
         Box(
             modifier = Modifier
@@ -618,6 +882,90 @@ fun EventChipItem(
                 .padding(horizontal = mediumPadding),
             size = textSize11sp
         )
+    }
+
+}
+
+@Composable
+fun PodCastView(
+    text: String,
+    baseColor: Color,
+    @DrawableRes icon: Int,
+    isBackgroundThemed: Boolean = false,
+    onClicked: () -> Unit
+) {
+
+    val color = MaterialTheme.colors.primaryVariant
+    val chipBaseColor = if (isBackgroundThemed) color else systemGray
+    var isPlaying by remember {
+        mutableStateOf(false)
+    }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = smallPadding, horizontal = eutiChatHorizontalSpacing)
+            .border(
+                border = BorderStroke(borderStroke1dot8dp, chipBaseColor),
+                shape = RoundedCornerShape(100)
+            )
+            .clickable {
+                onClicked()
+            }, verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .background(
+                    Color(
+                        chipBaseColor.red,
+                        chipBaseColor.green,
+                        chipBaseColor.blue,
+                        alpha = 0.2f
+                    ), RoundedCornerShape(100)
+                )
+                .padding(mediumPadding), contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(id = if (isPlaying) R.drawable.ic_baseline_pause_24 else R.drawable.ic_baseline_play_arrow_24),
+                contentDescription = "",
+                modifier = Modifier.size(
+                    size15dp
+                ), tint = chipBaseColor
+            )
+        }
+
+        var isRestart by remember {
+            mutableStateOf(true)
+        }
+        var scrollState = rememberScrollState(0)
+        var scrollValue by remember {
+            mutableStateOf(0)
+        }
+        val scrollAnimate by animateIntAsState(targetValue = scrollValue, animationSpec = tween(durationMillis = 1, easing = FastOutSlowInEasing))
+        LaunchedEffect(key1 = isRestart, block = {
+            while (scrollState.value < scrollState.maxValue){
+                scrollValue = scrollState.value + 8
+                scrollState.animateScrollTo(scrollAnimate,animationSpec = tween(durationMillis = 1, easing = FastOutSlowInEasing, delayMillis = 1))
+            }
+            if (scrollState.value >= scrollState.maxValue){
+                scrollValue = 0
+                scrollState.animateScrollTo(scrollAnimate,animationSpec = tween(durationMillis = 1, easing = FastOutSlowInEasing))
+                isRestart = !isRestart
+            }
+        })
+
+        Row(modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(scrollState)) {
+            RegularText(
+                text = text,
+                color = chipBaseColor,
+                modifier = Modifier
+                    .align(Alignment.CenterVertically)
+                    .padding(horizontal = mediumPadding),
+                size = textSize11sp
+            )
+        }
+
     }
 
 }

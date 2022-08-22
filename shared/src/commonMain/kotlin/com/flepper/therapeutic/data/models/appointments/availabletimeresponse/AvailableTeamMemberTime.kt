@@ -16,3 +16,8 @@ data class AvailableTeamMemberTime(
         return startTime.toEpochMilliseconds()
     }
 }
+
+
+
+@Serializable
+data class AvailableTimeResponse(@SerialName("availabilities") val availableTeamMemberTime:List<AvailableTeamMemberTime>,@SerialName("errors") val errors:List<String>? =null)

@@ -13,11 +13,14 @@ import com.flepper.therapeutic.data.reposositoryimpl.FlowList
 
 interface AppointmentsRepository {
     suspend fun createCustomer(request:Customer):FlowResult<CustomerResponse>
-    suspend fun getCustomer(request: Filter):FlowResult<CustomerResponse>
+    suspend fun getCustomer(request: Filter):FlowResult<List<CustomerResponse>>
     suspend fun getTeamMembers():FlowResult<List<TeamMembersItem>>
     suspend fun saveTeamMembersLocal(teamMembersItem: List<TeamMembersItem>)
     suspend fun getTeamMembersLocal():FlowList<TeamMembersItem>
     suspend fun getTeamAvailableTimes(request: SearchAvailabilityRequest):FlowResult<List<AvailableTeamMemberTime>>
     suspend fun bookAppointment(request: BookingRequest):FlowResult<BookAppointmentResponse>
     suspend fun saveBookingLocal(request: BookAppointmentResponse)
+    suspend fun getAppointmentsLocal():FlowList<BookAppointmentResponse>
+    suspend fun cancelBooking(bookingId:String):FlowResult<BookAppointmentResponse>
+    suspend fun deleteBookingLocal()
 }

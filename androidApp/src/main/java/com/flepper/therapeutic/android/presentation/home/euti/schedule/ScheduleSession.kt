@@ -34,6 +34,7 @@ import java.util.*
 @Composable
 fun SelectDateScreen(navController: NavController, eutiViewModel: EutiViewModel) {
     val context = LocalContext.current
+    eutiViewModel.setIsChatAdded(true)
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(spacing2dp)
@@ -49,25 +50,22 @@ fun SelectDateScreen(navController: NavController, eutiViewModel: EutiViewModel)
         }
 
         val isDark = isSystemInDarkTheme()
+        var appointmentDate = remember {
+            mutableStateOf(false)
+        }
         AndroidViewBinding(factory = ScheduleSessionCalendarViewBinding::inflate) {
-            val tomorrow =
-                Calendar.getInstance()
+
             calendarView.apply {
 
                 Log.e("Tomorrow", currentDate.toString())
-                val date = CalendarDay.from(
-                    tomorrow.get(Calendar.YEAR),
-                    tomorrow.get(Calendar.MONTH) + 1,
-                    tomorrow.get(Calendar.DATE)
-                )
-                eutiViewModel.setAppointmentDate(date)
-                setDateSelected(
+
+                /*setDateSelected(
                     CalendarDay.from(
                         tomorrow.get(Calendar.YEAR),
                         tomorrow.get(Calendar.MONTH) + 1,
                         tomorrow.get(Calendar.DATE)
                     ), true
-                )
+                )*/
                 this.setDateTextAppearance(if (isDark) R.color.transGray else R.color.textColor)
                 addDecorator(
                     DayDisableDecorator(
@@ -80,20 +78,26 @@ fun SelectDateScreen(navController: NavController, eutiViewModel: EutiViewModel)
                     )
                 )
                 setOnDateChangedListener { widget, date, selected ->
+
                     eutiViewModel.setAppointmentDate(date)
+                    appointmentDate.value = true
                 }
             }
         }
         RoundedCornerButton(
             text = stringResource(id = R.string.continue_button),
+            isEnabled =  appointmentDate.value ,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = spacing5dp, end = spacing5dp, bottom = spacing5dp)
         ) {
-            val eutiChat = EutiChatType.Euti(context.getString(R.string.select_appointment_time,"${eutiViewModel.selectedAppointmentDate.value}"), false).apply {
-                this.isHead = eutiViewModel.checkHead(this)
-            }
-            eutiViewModel.addToReplies(eutiChat)
+            eutiViewModel.addToReplies(EutiChatType.Euti(context.getString(R.string.checking_for_time_availabity),false).apply {
+                isHead = eutiViewModel.checkHead(this)
+            })
+            eutiViewModel.setIsChatLoading(true)
+
+
+
             eutiViewModel.getTeamMembersAvailableTime()
             navController.navigate(EutiScreens.ScheduleSessionTimeScreen(eutiViewModel).screenName)
         }
@@ -123,9 +127,11 @@ fun SelectScheduleTime(navController: NavController, eutiViewModel: EutiViewMode
         val currentAvailableTime by eutiViewModel.selectedAppointmentTime.collectAsState()
 
 
+
         Column(modifier = Modifier
             .height(280.dp)
-            .padding(horizontal = spacing12dp), verticalArrangement = Arrangement.spacedBy(
+            .padding(horizontal = spacing12dp)
+            .verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(
             mediumPadding)){
             appointmentTimes.forEachIndexed { index, item ->
                 AvailableTimeItem(availableTime = item,currentAvailableTime == item){current ->
@@ -137,13 +143,26 @@ fun SelectScheduleTime(navController: NavController, eutiViewModel: EutiViewMode
         RoundedCornerButton(
             text = stringResource(id = R.string.continue_button),
             isEnabled = currentAvailableTime.isNotEmpty(),
+            isLoading = isChatLoading,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = spacing5dp, end = spacing5dp, bottom = spacing5dp)
         ) {
-
+            eutiViewModel.addToReplies(EutiChatType.Euti(context.getString(R.string.booking_appointment_please_wait),false).apply {
+                isHead = eutiViewModel.checkHead(this)
+            })
+            eutiViewModel.bookAppointment()
+            eutiViewModel.setIsChatLoading(true)
         }
 
+        val bookingSuccess by eutiViewModel.bookingSuccess.collectAsState()
+
+        LaunchedEffect(key1 = bookingSuccess, block = {
+            if (bookingSuccess){
+                navController.popBackStack(EutiScreens.EutiViewNames.MainBottomContent.name,false)
+                eutiViewModel.setBookingFailed()
+            }
+        })
 
     }
 }

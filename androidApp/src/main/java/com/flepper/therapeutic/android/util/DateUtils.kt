@@ -21,10 +21,19 @@ fun LocalDateTime.parseToMonthDayString(): String {
     return dateFormat.format(date)
 }
 
+fun Calendar.parseToMonthDayString(): String {
+    val dateFormat = SimpleDateFormat(
+        "EEE, MMM d",
+        Locale.getDefault()
+    )
+    val date = this.time
+    return dateFormat.format(date)
+}
+
 fun CalendarDay.toAppointmentStartCalendar():Calendar{
     val cal = Calendar.getInstance()
     cal.set(Calendar.YEAR,this.year)
-    cal.set(Calendar.MONTH,this.month)
+    cal.set(Calendar.MONTH,this.month - 1)
     cal.set(Calendar.DATE,this.day)
     cal.set(Calendar.HOUR_OF_DAY,8)
     cal.set(Calendar.MINUTE,0)
@@ -38,7 +47,7 @@ fun CalendarDay.toAppointmentEndCalendar():Calendar{
     gc.add(Calendar.DATE, 1)
     val cal = Calendar.getInstance()
     cal.set(Calendar.YEAR,this.year)
-    cal.set(Calendar.MONTH,this.month)
+    cal.set(Calendar.MONTH,this.month - 1)
     cal.set(Calendar.DATE,gc.get(GregorianCalendar.DATE))
     cal.set(Calendar.HOUR_OF_DAY,8)
     cal.set(Calendar.MINUTE,0)
@@ -64,6 +73,15 @@ fun LocalDateTime.parseToHourMinuteString(): String {
         Locale.getDefault()
     )
     val date = Date(this.toInstant(kotlinx.datetime.TimeZone.currentSystemDefault()).toEpochMilliseconds())
+    return dateFormat.format(date)
+}
+
+fun Calendar.parseToHourMinuteString(): String {
+    val dateFormat = SimpleDateFormat(
+        "hh:mm aa",
+        Locale.getDefault()
+    )
+    val date = this.time
     return dateFormat.format(date)
 }
 
@@ -134,4 +152,14 @@ fun String.convertUTCTimeToSystemDefault():Calendar{
         Calendar.getInstance()
     }
 
+}
+
+fun String.fromApiTime():Calendar{
+    return try {
+        val cal = Calendar.getInstance()
+        cal.time = SimpleDateFormat(SQUARE_API_DATE_FORMAT, Locale.getDefault()).parse(this)
+        cal
+    } catch (e:Exception){
+        Calendar.getInstance()
+    }
 }

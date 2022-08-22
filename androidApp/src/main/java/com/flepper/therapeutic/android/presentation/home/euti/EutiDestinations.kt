@@ -13,7 +13,7 @@ enum class SheetContentType {
     ONGOING_EVENTS,
     UPCOMING_EVENTS,
     SCHEDULE_SESSION,
-    WATCH_FEATURED_VIDEOS,
+    LISTEN_TO_PODCASTS,
     DEFAULT
 
 }
@@ -25,6 +25,15 @@ sealed class EutiScreens(
     var bottomSheetContent: @Composable (NavController) -> Unit
 ) {
 
+    enum class EutiViewNames(name:String){
+        MainBottomContent("Main Sheet"),
+        GenericBottomView("GenericSheet"),
+        LoginScreenView("LoginScreen"),
+        ToSignUpOrSignInScreen("ToSignUpOrSignInScreen"),
+        ScheduleSessionDateScreen("ScheduleSessionScreen"),
+        ScheduleSessionTimeScreen("ScheduleTimeScreen")
+    }
+
     /** @MainBottomContent*/
     class MainBottomContent(
         items: List<EutiMainSheetItem>,
@@ -33,7 +42,7 @@ sealed class EutiScreens(
         onWatchedFeaturedVideosClick: () -> Unit,
     ) :
         EutiScreens(
-            "Main Sheet",
+            EutiViewNames.MainBottomContent.name,
             bottomSheetContent = { nav ->
                 MainSheet(
                     items,
@@ -51,7 +60,7 @@ sealed class EutiScreens(
         title: String = "",
         eutiViewModel: EutiViewModel,
         onHomeClicked: () -> Unit = {}
-    ) : EutiScreens("GenericSheet", bottomSheetContent = { nav ->
+    ) : EutiScreens(EutiViewNames.GenericBottomView.name, bottomSheetContent = { nav ->
         GenericBottomContent(
             title = title,
             navController = nav, eutiViewModel, onHomeClicked
@@ -60,14 +69,14 @@ sealed class EutiScreens(
 
 
     class LoginScreenView(eutiViewModel: EutiViewModel) :
-        EutiScreens("LoginScreen", bottomSheetContent = { nav ->
+        EutiScreens(EutiViewNames.LoginScreenView.name, bottomSheetContent = { nav ->
             RegistrationScreen(
                 eutiViewModel = eutiViewModel, nav
             )
         })
 
     class ToSignUpOrSignInScreen(eutiViewModel: EutiViewModel) :
-        EutiScreens("ToSignUpOrSignInScreen", bottomSheetContent = { nav ->
+        EutiScreens(EutiViewNames.ToSignUpOrSignInScreen.name, bottomSheetContent = { nav ->
             LoginOrSignUpButtonScreen(
                 navController = nav,
                 eutiViewModel = eutiViewModel
@@ -75,9 +84,9 @@ sealed class EutiScreens(
         })
 
     class ScheduleSessionDateScreen(eutiViewModel: EutiViewModel) :
-        EutiScreens("ScheduleSessionScreen", bottomSheetContent = { nav -> SelectDateScreen(nav,eutiViewModel)  })
+        EutiScreens(EutiViewNames.ScheduleSessionDateScreen.name, bottomSheetContent = { nav -> SelectDateScreen(nav,eutiViewModel)  })
 
 
-    class ScheduleSessionTimeScreen(eutiViewModel: EutiViewModel) : EutiScreens("ScheduleTimeScreen", bottomSheetContent = {nav -> SelectScheduleTime(nav,eutiViewModel)})
+    class ScheduleSessionTimeScreen(eutiViewModel: EutiViewModel) : EutiScreens(EutiViewNames.ScheduleSessionTimeScreen.name, bottomSheetContent = {nav -> SelectScheduleTime(nav,eutiViewModel)})
 
 }

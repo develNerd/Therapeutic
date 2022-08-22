@@ -3,7 +3,7 @@ package com.flepper.therapeutic.android.presentation.home.euti
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Card
+import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -11,25 +11,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.lerp
 import androidx.compose.ui.util.lerp
 import androidx.compose.ui.viewinterop.AndroidViewBinding
 import com.bumptech.glide.Glide
 import com.flepper.therapeutic.android.R
 import com.flepper.therapeutic.android.databinding.BotTypingLayoutBinding
-import com.flepper.therapeutic.android.presentation.core.BaseViewModel
-import com.flepper.therapeutic.android.presentation.home.HomeViewModel
-import com.flepper.therapeutic.android.presentation.home.WorldWideEventsItem
+import com.flepper.therapeutic.android.presentation.home.*
 import com.flepper.therapeutic.android.presentation.theme.*
 import com.flepper.therapeutic.android.presentation.widgets.MediumTextBold
 import com.flepper.therapeutic.data.models.WorldWideEvent
+import com.flepper.therapeutic.data.models.appointments.booking.BookAppointmentResponse
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.calculateCurrentOffsetForPage
-import com.google.accompanist.pager.rememberPagerState
 import kotlin.math.absoluteValue
 
 sealed class EutiChatType {
@@ -40,7 +37,13 @@ sealed class EutiChatType {
     ) : EutiChatType()
 
     class User(val text: String, var isHead: Boolean) : EutiChatType()
-    class Content(val id:String,val content:List<WorldWideEvent> = emptyList(),val sheetContentType: SheetContentType) : EutiChatType()
+    class Content(
+        val id: String,
+        val content: List<WorldWideEvent> = emptyList(),
+        val localSessions: List<BookAppointmentResponse> = emptyList(),
+        val sheetContentType: SheetContentType
+    ) : EutiChatType()
+
     object Default
 }
 
@@ -76,7 +79,6 @@ fun ChatView(
     ) {
 
 
-
         ottoChatReplies.forEachIndexed { index, chat ->
             var show by remember {
                 mutableStateOf(false)
@@ -92,9 +94,7 @@ fun ChatView(
                     }
                     is EutiChatType.Content -> {
                         when (chat.sheetContentType) {
-                            SheetContentType.ONGOING_EVENTS  -> {
-
-
+                            SheetContentType.ONGOING_EVENTS -> {
                                 SheetContentTypeOngoingEvents(
                                     ongoingEvents = chat.content,
                                     homeViewModel
@@ -108,12 +108,25 @@ fun ChatView(
                                     )
 
                                 }
-
+                            }
+                            SheetContentType.SCHEDULE_SESSION -> {
+                                if (chat.localSessions.isNotEmpty()) {
+                                    Box(contentAlignment = Alignment.CenterStart) {
+                                        AppointmentItem(
+                                            appointment = chat.localSessions.first(),
+                                            index = 0,
+                                            onClicked = {
+                                                homeViewModel.setCurrentBottomSheetType(BottomSheetContentType.APPOINTMENT)
+                                                homeViewModel.refreshSessionSelection()
+                                            })
+                                    }
+                                }
 
                             }
-                            SheetContentType.SCHEDULE_SESSION -> {}
-                            SheetContentType.WATCH_FEATURED_VIDEOS -> {
-                                /** TODO -> Do Nothing for now*/
+                            SheetContentType.LISTEN_TO_PODCASTS -> {
+                                PodCastView(text = stringResource(id = R.string.response_to_found_events), baseColor = lightViolet, icon = R.drawable.ic_baseline_play_arrow_24) {
+
+                                }
                             }
                             SheetContentType.DEFAULT -> {
 
@@ -131,7 +144,7 @@ fun ChatView(
 }
 
 
-data class ContentItemValues<T>(val id:T)
+data class ContentItemValues<T>(val id: T)
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
@@ -178,10 +191,15 @@ fun SheetContentTypeOngoingEvents(
                 onClicked = { selected ->
                     homeViewModel.setSelectedEvent(selected)
                     homeViewModel.refreshEventSelection()
+                    homeViewModel.setCurrentBottomSheetType(BottomSheetContentType.EVENT)
+
                 })
 
-            if (ongoingEvents.first().id == ongoingEvents[page].id && !ongoingEvents[page].isOngoing){
-                AndroidViewBinding(BotTypingLayoutBinding::inflate, modifier = Modifier.padding(start = mediumPadding)) {
+            if (ongoingEvents.first().id == ongoingEvents[page].id && !ongoingEvents[page].isOngoing) {
+                AndroidViewBinding(
+                    BotTypingLayoutBinding::inflate,
+                    modifier = Modifier.padding(start = mediumPadding)
+                ) {
                     imageTyping.apply {
                         Glide.with(context)
                             .load(R.drawable.ic_scrolling_left)
@@ -231,7 +249,8 @@ fun EutiBotView(text: String, isHead: Boolean = false) {
                         text = text,
                         modifier = Modifier.padding(
                             mediumPadding
-                        )
+                        ),
+                        color = if (text == stringResource(id = R.string.yay_booked)) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface
                     )
                 } else {
                     val context = LocalContext.current

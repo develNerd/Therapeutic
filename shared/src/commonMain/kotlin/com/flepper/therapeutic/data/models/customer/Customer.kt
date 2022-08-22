@@ -23,6 +23,9 @@ data class Customer(
 )
 
 @Serializable
+data class GetCustomersResponse(@SerialName("customers") val customers:List<CustomerResponse>)
+
+@Serializable
 data class CustomerResponse(
     @SerialName("email_address")
     val emailAddress: String = "",
