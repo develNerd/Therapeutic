@@ -51,6 +51,12 @@ android {
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
+            isDebuggable = true
+            buildConfigField("String", "WEB_CLIENT_API_KEY", key)
+            buildConfigField("String", "SQUARE_ACCESS_TOKEN", squareDefAccessToken)
+            buildConfigField("String", "SQUARE_REFRESH_TOKEN", squareDefRefreshToken)
+            buildConfigField("String", "THERAPY_SESSION_CATALOG_ITEM_ID", therapy_session_id)
+            buildConfigField("String", "DEFAULT_TEST_LOCATION_ID", defaultTestLocationId)
         }
         getByName("debug") {
             buildConfigField("String", "WEB_CLIENT_API_KEY", key)
@@ -59,13 +65,7 @@ android {
             buildConfigField("String", "THERAPY_SESSION_CATALOG_ITEM_ID", therapy_session_id)
             buildConfigField("String", "DEFAULT_TEST_LOCATION_ID", defaultTestLocationId)
         }
-        getByName("release") {
-            buildConfigField("String", "WEB_CLIENT_API_KEY", key)
-            buildConfigField("String", "SQUARE_ACCESS_TOKEN", squareDefAccessToken)
-            buildConfigField("String", "SQUARE_REFRESH_TOKEN", squareDefRefreshToken)
-            buildConfigField("String", "THERAPY_SESSION_CATALOG_ITEM_ID", therapy_session_id)
-            buildConfigField("String", "DEFAULT_TEST_LOCATION_ID", defaultTestLocationId)
-        }
+
     }
 
     composeOptions {
