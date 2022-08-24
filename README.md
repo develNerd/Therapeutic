@@ -1,8 +1,11 @@
 # Therapeutic
 
+
+Therapeutic is a Kotlin Mobile Multiplatform App that aims to help make access to mental health solutions as effortless as we can. We believe that making therapy an easy to have will help reduce the replications of mental health issues. The USA for example has had multiple mass shootings, studies have shown that most of the culprits may have suffered some form of mental health issue. 
+
 Studies have shown that one in five (5) people may experience mental health issues at some point in their life. Mental health issues might not only have an effect on the patient, as he interacts with others this might extend to damage their relationships with others as well as extend to people they interact with.
 
-Therapeutic aims to help make access to mental health solutions as effortless as we can. We believe that making therapy an easy to have will help reduce the replications of mental health issues. The USA for example has had multiple mass shootings, studies have shown that most of the culprits may have suffered some form of mental health issue. 
+
 
 We also aim to provide and extend our services to the third world, as at these parts of the world, therapy is taken very lightly and a very small portion of people value the need for therapy. 
 
@@ -72,4 +75,15 @@ We have however decided to go with twitter spaces for now and can support other 
 Therapeutic will wish to start as a non-profit company in order to attract investors and professional therapists willing to make our world a better place. We will also build forums to solicit for donations.
 
 If our MVP is successful hopefully, we shall start business early 2023 (in 1st Quarter).
+
+## Screen Shots
+
+
+
+
+
+![Therape-min](https://user-images.githubusercontent.com/37780207/186479789-5443161a-f578-4bc1-97fc-6fb45aed653a.png)  ![therapeutic_username-min](https://user-images.githubusercontent.com/37780207/186479883-c453e41c-dae6-4f98-a4cf-4251300886e9.png)  ![therapeutic_home-min](https://user-images.githubusercontent.com/37780207/186480371-2be77e35-f369-40cc-b9bf-c40efb3a780a.png)  ![therapeutic_euti-min](https://user-images.githubusercontent.com/37780207/186480656-dd132a08-44f8-48e4-adbb-e30e3f0d6f55.png)  ![therapeutic_euti_home-min](https://user-images.githubusercontent.com/37780207/186480725-a5650add-cfe4-4ecd-98bf-649ae0e716b1.png)  ![therapeutic_euti_upcoming-min](https://user-images.githubusercontent.com/37780207/186480765-49fa1e62-1c32-4f7b-8e3f-3fa22c5f0d29.png)  ![therapeutic_join_event-min](https://user-images.githubusercontent.com/37780207/186480794-08494619-95be-4cea-8d0e-d9c48bbf6035.png)  ![therapeutic_event_scduled-min](https://user-images.githubusercontent.com/37780207/186481179-876ec8de-6b49-4e1b-8fc3-e6ba16b7fe14.png)
+
+
+
 
