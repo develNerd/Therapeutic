@@ -367,15 +367,24 @@ class EutiViewModel : BaseViewModel() {
     fun getAvailableDates(): HashSet<CalendarDay> {
         val availableDates = mutableSetOf<CalendarDay>()
         val startCal = Calendar.getInstance()
-        val start = startCal.get(Calendar.DATE)
+        var start = startCal.get(Calendar.DATE)
         startCal.set(Calendar.DATE, startCal.get(Calendar.DATE).plus(7))
         val lastIndex = startCal.get(Calendar.DATE)
+        var isEndOfMonth = false
+
+        if (start > lastIndex){
+            isEndOfMonth = true
+            availableDates.add(Calendar.getInstance().toCalendarDay())
+            start = 1
+        }
         Log.e("Start-last", "$start + $lastIndex")
+
         (start..lastIndex).forEach { day ->
-            val c1 = Calendar.getInstance()
+            val c1 = if (!isEndOfMonth) Calendar.getInstance() else Calendar.getInstance().apply { this.set(Calendar.MONTH,this.get(Calendar.MONTH) + 1) }
             c1.set(Calendar.DATE, day)
             availableDates.add(c1.toCalendarDay())
         }
+
         return availableDates.toHashSet()
     }
 
