@@ -28,7 +28,7 @@ class AppointmentsRepositoryImpl(private val api: Api, therapeuticDb: Therapeuti
 
     override suspend fun createCustomer(request: Customer): FlowResult<CustomerResponse> =
         makeRequestToApi {
-            api.createCustomer(request)
+            api.createCustomer(request).customer
         }
 
     override suspend fun getCustomer(request: Filter): FlowResult<List<CustomerResponse>> =

@@ -9,14 +9,11 @@ import com.flepper.therapeutic.data.models.appointments.availabletimeresponse.Av
 import com.flepper.therapeutic.data.models.appointments.booking.BookAppointmentResponse
 import com.flepper.therapeutic.data.models.appointments.booking.BookingRequest
 import com.flepper.therapeutic.data.models.appointments.booking.Data
-import com.flepper.therapeutic.data.models.customer.Customer
-import com.flepper.therapeutic.data.models.customer.CustomerResponse
-import com.flepper.therapeutic.data.models.customer.GetCustomersResponse
-import com.flepper.therapeutic.data.models.customer.SearchCustomer
+import com.flepper.therapeutic.data.models.customer.*
 
 class Api(private val squareHttpClient: SquareHttpClient) {
 
-    suspend fun createCustomer(request: Customer): CustomerResponse {
+    suspend fun createCustomer(request: Customer): CustomerWrapperResponse {
         return squareHttpClient.POST(CUSTOMERS,request)
     }
 
