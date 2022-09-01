@@ -333,8 +333,12 @@ class EutiViewModel : BaseViewModel() {
                     )
                     appPreferences.signInUser = signInResult
                 } else {
-                    _signUpResponse.value = OnResultObtained(signInResult, true)
-                    appPreferences.signInUser = signInResult
+                    _signUpResponse.value = OnResultObtained(signInResult.apply { squareCustomerID = result.customer_id }, true)
+                    appPreferences.signInUser = signInResult.apply {
+                        Log.e("ResultFor",result.toString())
+                        squareCustomerID = result.customer_id
+                        Log.e("ResultSquareCustomer ID",squareCustomerID)
+                    }
                 }
             },
             onError = {
